@@ -1,5 +1,6 @@
 const nodemailer = require("nodemailer");
 const OTP = require("./../controller/schema")
+const jwt = require("jsonwebtoken")
 require('dotenv').config()
 const mail = process.env.MAIL
 const pass = process.env.PASS
@@ -47,3 +48,25 @@ const authToken = process.env.TWILIO_AUTH_TOKEN
                       })
        return Otp
       }
+
+      exports.generateToken = () => {
+          try {
+            const token = jwt.sign({ email: this.email }, "adsfdsfdfdsffsd!", { expiresIn: "1h" })
+            console.log( token)
+          } catch (error) {
+              console.log(error)
+          }
+      }
+
+
+    exports.tokenVerify = (req,res) => {
+        try {
+            const bearerHeader = req.headers['authorization']
+                const bearer = bearerHeader.split(' ')
+                const token = bearer[1]
+            jwt.verify(token, "adsfdsfdfdsffsd!")
+            res.status(200).json({status : 200 , message : "Valid token"})
+        } catch (error) {
+            res.status(400).json({status : 400 , message : "Invalid token"})
+        }
+    }

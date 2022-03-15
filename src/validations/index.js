@@ -28,8 +28,8 @@ exports.loginValidation = (req, res, next) => {
         const JoiSchema = Joi.object({
             number: Joi.string().min(10).max(12).optional(),
             email: Joi.string().email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } }).optional(),
-            otp: Joi.number().min(6).max(6),
-            password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).required(),
+            otp: Joi.string().min(6).max(6),
+            password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')),
         }).or("email" , "number")
         return JoiSchema.validate(user)
     }
