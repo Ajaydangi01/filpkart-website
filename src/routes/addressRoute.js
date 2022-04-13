@@ -52,9 +52,6 @@ const addressRouter = new express.Router();
 //  *                    pincode : 452010
 //  *                    state : mp
 //  *                    country : india
-//  *     security: [{
-//  *       jwt: []
-//  *              }]
 //  *     responses:
 //  *      200:
 //  *        description: OK
@@ -62,8 +59,7 @@ const addressRouter = new express.Router();
 //  *        description: Bad request
 //  */
 
-//  addressRouter.post("/api/create_address",addressValidation, addressController.create_address)
-addressRouter.post('/api/create_address', addressValidation, addressController.create_address);
+addressRouter.post('/createAddress', addressValidation, addressController.create_address);
 
 /**
  * @swagger
@@ -84,7 +80,7 @@ addressRouter.post('/api/create_address', addressValidation, addressController.c
  *      409:
  *        description: Bad request
  */
-addressRouter.get('/api/show_address', addressController.show_address);
+addressRouter.get('/showAddress', addressController.show_address);
 
 /**
  * @swagger
@@ -116,7 +112,7 @@ addressRouter.get('/api/show_address', addressController.show_address);
  *      409:
  *        description: Bad request
  */
-addressRouter.put('/api/update_address/:id', addressController.update_address);
+addressRouter.put('/updateAddress/:id', addressController.update_address);
 
 /**
  * @swagger
@@ -136,7 +132,7 @@ addressRouter.put('/api/update_address/:id', addressController.update_address);
  *      409:
  *        description: Bad request
  */
-addressRouter.delete('/api/delete_address/:id', addressController.delete_address);
+addressRouter.delete('/deleteAddress/:id', addressController.delete_address);
 
 addressRouter.get('/api/get_Data', addressController.get_Data);
 

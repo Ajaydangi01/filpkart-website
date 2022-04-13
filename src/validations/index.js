@@ -82,7 +82,6 @@ exports.sellerProfileValidation = (req, res, next) => {
 };
 
 exports.productValidation = (req, res, next) => {
-  // console.log(req.body.productDetail)
   const validateProduct = (product) => {
     const JoiSchema = Joi.object({
       image: Joi.string().optional(),
@@ -94,7 +93,7 @@ exports.productValidation = (req, res, next) => {
     });
     return JoiSchema.validate(product);
   };
-  const response = validateProduct(req.body);
+  const response = validateProduct(req.data);
   if (response.error) {
     const msg = response.error.details[0].message;
     return res.status(422).json({ status: 422, message: msg });
@@ -103,3 +102,20 @@ exports.productValidation = (req, res, next) => {
   }
 };
 
+exports.brandValidation = (req, res, next) => {
+  const validateBrand = (brand) => {
+    const JoiSchema = Joi.object({
+      image: Joi.string().optional(),
+      brandName: Joi.string().min(2).max(30).required(),
+      description: Joi.string().min(2).max(99).required(),
+    });
+    return JoiSchema.validate(brand);
+  };
+  const response = validateBrand(req.body);
+  if (response.error) {
+    const msg = response.error.details[0].message;
+    return res.status(422).json({ status: 422, message: msg });
+  } else {
+    next();
+  }
+};

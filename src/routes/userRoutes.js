@@ -5,7 +5,7 @@ const userRouter = new express.Router();
 
 /**
  * @swagger
- * /api/user_signup:
+ * /userSignup:
  *   post:
  *     summary: User signup
  *     tags : [User]
@@ -46,7 +46,7 @@ userRouter.post('/userSignup', signupValidation, userController.user_signup);
 
 /**
  * @swagger
- * /api/user_login:
+ * /userLogin:
  *   post:
  *     summary: User login
  *     tags : [User]
@@ -83,7 +83,7 @@ userRouter.post('/userLogin', loginValidation, userController.user_login);
 
 /**
  * @swagger
- * /api/confirm_Email/:token:
+ * /confirmEmail/:token:
  *   get:
  *     summary: Verify by email
  *     tags : [User]
@@ -101,7 +101,7 @@ userRouter.post('/userLogin', loginValidation, userController.user_login);
  *      409:
  *        description: Bad request
  */
-userRouter.get('/api/confirm_email/:token', userController.confirm_email);
+userRouter.get('/confirmEmail/:token', userController.confirm_email);
 
 /**
  * @swagger
@@ -134,9 +134,11 @@ userRouter.get('/api/confirm_email/:token', userController.confirm_email);
  *      409:
  *        description: Bad request
  */
-userRouter.post('/api/verify_otp', loginValidation, userController.verify_otp);
+userRouter.post('/verify_otp', loginValidation, userController.verify_otp);
 
-userRouter.put('/api/user_update/:id',  userController.user_update);
+userRouter.put('/user_update/:id', userController.user_update);
+
+// userRouter.put("/sendMessage" , userController.sendMessage)
 
 
 module.exports = userRouter;

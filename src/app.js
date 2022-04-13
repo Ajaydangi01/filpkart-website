@@ -2,7 +2,8 @@ const http = require('http');
 const cors = require("cors")
 const express = require('express');
 const route = require('./routes/routes');
-const { userRouter, addressRouter, sellerProRouter, productRouter } = require("./middleware/routefile")
+const rateLimit = require('express-rate-limit');
+const { userRouter, addressRouter, sellerProRouter, productRouter, cartRouter } = require("./middleware/routefile")
 const swaggerUI = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
 const { logger } = require('./shared/logger');
@@ -17,6 +18,17 @@ app.use(express.static('public'));
 app.set('view engine', 'hbs');
 app.set('views', __dirname + '/views');
 
+const createAccountLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 hour
+  max: 15,
+  message: 'Too many attempts , try again after 1 hour"',
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false
+})
+
+//  res.status(400).json({ status: 400, message: " success: false })
+
+app.use(createAccountLimiter)
 const option = {
   definition: {
     openapi: '3.0.0',
@@ -48,7 +60,7 @@ const option = {
   },
   apis: [`${__dirname}/routes/*.js`],
 };
-app.use('/', route, userRouter, addressRouter, sellerProRouter, productRouter);
+app.use('/', route, userRouter, addressRouter, sellerProRouter, productRouter, cartRouter);
 
 const specs = swaggerJsDoc(option);
 app.use('/createApi', swaggerUI.serve, swaggerUI.setup(specs));

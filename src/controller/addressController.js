@@ -14,13 +14,13 @@ module.exports = {
                 req.body.isDefault = true;
                 req.body.userId = user.id;
                 const result = new Address(req.body);
-                result.save();
-                res.status(200).json({ status: 200, message: 'Address added successfully' });
+                const data = await result.save();
+                res.status(200).json({ status: 200, message: 'Address added successfully', success: true });
             } else {
                 req.body.userId = user.id;
                 const result = new Address(req.body);
                 result.save();
-                res.status(200).json({ status: 200, message: 'Address added successfully' });
+                res.status(200).json({ status: 200, message: 'Address added successfully', success: true });
             }
         } catch (error) {
             res.status(400).json({ status: 400, message: error.message });
@@ -29,7 +29,15 @@ module.exports = {
 
     show_address: async (req, res) => {
         try {
-            const user = await Address.find({});
+            const { page = 1, limit = 5 } = req.query;
+            const filter = { productId: req.id, isActive: true }
+            let newFilter;
+            if (req.query.filter) {
+                newFilter = Object.assign(filter, JSON.parse(req.query.filter))
+            } else {
+                newFilter = filter
+            }
+            const user = await Address.find({}).limit(limit * 1).skip((page - 1) * limit).sort({ createAt: 1 });
             res.status(200).json({ status: 200, message: user, success: true });
         } catch (error) {
             res

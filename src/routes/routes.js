@@ -1,8 +1,8 @@
 const express = require('express');
 const postController = require('./../controller/controller');
 const brandCategoryController = require("./../controller/brandCategoryController")
-const { tokenVerify, allowTo } = require('./../middleware/index');
-const { signupValidation, loginValidation } = require('./../validations');
+const { tokenVerify, allowTo, uploadSingleImage } = require('./../middleware/index');
+const { signupValidation, loginValidation, brandValidation } = require('./../validations');
 const router = new express.Router();
 
 /**
@@ -122,25 +122,251 @@ router.get('/api/getAllSellers', tokenVerify, allowTo("admin"), postController.g
  */
 router.put('/api/VerifyByAdmin', tokenVerify, allowTo("admin"), postController.verifiedByAdmin); // Admin
 
-router.post('/api/createBrand', tokenVerify, allowTo("admin"), brandCategoryController.createBrand); // create brand by admin
+/** @swagger
+ *  components:
+ *      schemas:
+ *          brand:
+ *              type: object
+ *              required :
+ *                  - brandName
+ *                  - description
+ *                  - image
+ *              properties:
+ *                  brandName:
+ *                      type : string
+ *                  description:
+ *                      type : string
+ *                  image:
+ *                      type: string
+ *                      format: binary
+ */
 
-router.get('/api/showBrand', tokenVerify, allowTo("admin"), brandCategoryController.showBrand) // show all brand
+/**
+ * @swagger
+ * /createBrand:
+ *   post:
+ *     summary: create brand
+ *     tags : [Brand]
+ *     requestBody:
+ *         required: true
+ *         content:
+ *          multipart/form-data:
+ *            schema:
+ *              $ref : '#components/schemas/brand'  
+ *     responses:
+ *          200:
+ *            description: OK
+ *          400:
+ *            description: Bad request
+ */
+router.post('/createBrand', tokenVerify, uploadSingleImage, brandValidation, allowTo("admin"), brandCategoryController.createBrand); // create brand by admin
 
-router.get('/api/showOneBrand/:id', tokenVerify, allowTo("admin"), brandCategoryController.showOneBrand) // show brand by id
 
-router.delete('/api/deleteBrand/:id', tokenVerify, allowTo("admin"), brandCategoryController.deleteBrand) // delete brand by id
+/**
+ * @swagger
+ * /showBrand:
+ *   get:
+ *     summary: get all Brand
+ *     tags : [Brand]
+ *     body:
+ *         required: true
+ *         content:
+ *          application/json:
+ *     responses:
+ *      200:
+ *        description: OK
+ *      400:
+ *        description: Bad request
+ */
+router.get('/showBrand', tokenVerify, allowTo("admin"), brandCategoryController.showBrand) // show all brand
 
-router.put('/api/updateBrand/:id', tokenVerify, allowTo("admin"), brandCategoryController.updateBrand) // update brand by id
 
-router.post('/api/create_category', tokenVerify, allowTo("admin"), brandCategoryController.create_category); // create category brand by admin
+/**
+ * @swagger
+ * /showOneBrand/{id}:
+ *   get:
+ *     summary: show brand by id
+ *     tags: [Brand]
+ *     parameters:
+ *      - in: path
+ *        name: id
+ *        schema:
+ *          type: string
+ *     responses:
+ *       200:
+ *         description: ok
+ *       400:
+ *        description: Bad request
+ *
+ */
+router.get('/showOneBrand/:id', tokenVerify, allowTo("admin"), brandCategoryController.showOneBrand) // show brand by id
 
-router.get('/api/show_category', tokenVerify, allowTo("admin"), brandCategoryController.show_category); //  show all category 
+/**
+ * @swagger
+ * /deleteBrand/{id}:
+ *   delete:
+ *     summary: delete brand
+ *     tags: [Brand]
+ *     parameters:
+ *      - in: path
+ *        name: id
+ *        schema:
+ *          type: string
+ *     responses:
+ *       200:
+ *         description: ok
+ *       400:
+ *        description: Bad request
+ */
+router.delete('/deleteBrand/:id', tokenVerify, allowTo("admin"), brandCategoryController.deleteBrand) // delete brand by id
 
-router.get('/api/show_one_category/:id', tokenVerify, allowTo("admin"), brandCategoryController.show_one_category); //  show category by id
 
-router.delete('/api/delete_category/:id', tokenVerify, allowTo("admin"), brandCategoryController.delete_category); // delete category by id
+/**
+ * @swagger
+ * /updateBrand/{id}:
+ *   put:
+ *     summary: update brand
+ *     tags: [Brand]
+ *     parameters:
+ *      - in: path
+ *        name: id
+ *        schema:
+ *          type: string
+ *     requestBody:
+ *         required: true
+ *         content:
+ *          multipart/form-data:
+ *            schema:
+ *              $ref : '#components/schemas/brand'
+ *     responses:
+ *       200:
+ *         description: ok
+ *       400:
+ *        description: Bad request
+ */
+router.put('/updateBrand/:id', tokenVerify, allowTo("admin"), brandCategoryController.updateBrand) // update brand by id
 
-router.put('/api/update_category/:id', tokenVerify, allowTo("admin"), brandCategoryController.update_category); // update category by id
+
+/** @swagger
+ *  components:
+ *      schemas:
+ *          category:
+ *              type: object
+ *              required :
+ *                  - categoryName
+ *                  - description
+ *                  - image
+ *              properties:
+ *                  categoryName:
+ *                      type : string
+ *                  description:
+ *                      type : string
+ *                  image:
+ *                      type: string
+ *                      format: binary
+ *              example :
+ *                  categoryName: "Samsung"
+ *                  description: "Samsung Electronics Co. Ltd."
+ */
+
+
+/**
+ * @swagger
+ * /createCategory:
+ *   post:
+ *     summary: create category
+ *     tags : [Category]
+ *     requestBody:
+ *         required: true
+ *         content:
+ *          multipart/form-data:
+ *            schema:
+ *              $ref : '#components/schemas/category'  
+ *     responses:
+ *          200:
+ *            description: OK
+ *          400:
+ *            description: Bad request
+ */
+router.post('/createCategory', tokenVerify, uploadSingleImage, allowTo("admin"), brandCategoryController.createCategory); // create category brand by admin
+
+
+/**
+ * @swagger
+ * /showCategory:
+ *   get:
+ *     summary: get all category
+ *     tags : [Category]
+ *     body:
+ *         required: true
+ *         content:
+ *          application/json:
+ *     responses:
+ *      200:
+ *        description: OK
+ *      400:
+ *        description: Bad request
+ */
+router.get('/showCategory', tokenVerify, allowTo("admin"), brandCategoryController.show_category); //  show all category 
+
+
+/**
+ * @swagger
+ * /showOneCategory/{id}:
+ *   get:
+ *     summary: show category by id
+ *     tags: [Category]
+ *     parameters:
+ *      - in: path
+ *        name: id
+ *        schema:
+ *          type: string
+ *     responses:
+ *       200:
+ *         description: ok
+ *       400:
+ *        description: Bad request
+ */
+router.get('/showOneCategory/:id', tokenVerify, allowTo("admin"), brandCategoryController.show_one_category); //  show category by id
+
+
+/**
+ * @swagger
+ * /deleteCategory/{id}:
+ *   delete:
+ *     summary: delete category by id
+ *     tags: [Category]
+ *     parameters:
+ *      - in: path
+ *        name: id
+ *        schema:
+ *          type: string
+ *     responses:
+ *       200:
+ *         description: ok
+ *       400:
+ *        description: Bad request
+ */
+router.delete('/deleteCategory/:id', tokenVerify, allowTo("admin"), brandCategoryController.delete_category); // delete category by id
+
+/**
+ * @swagger
+ * /updateCategory/{id}:
+ *   put:
+ *     summary: update category
+ *     tags: [Category]
+ *     parameters:
+ *      - in: path
+ *        name: id
+ *        schema:
+ *          type: string
+ *     responses:
+ *       200:
+ *         description: ok
+ *       400:
+ *        description: Bad request
+ */
+router.put('/updateCategory/:id', tokenVerify, allowTo("admin"), brandCategoryController.update_category); // update category by id
 
 /**
  * @swagger

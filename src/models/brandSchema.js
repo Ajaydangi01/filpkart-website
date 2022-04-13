@@ -2,9 +2,8 @@ const mongoose = require('mongoose');
 const brandSchema = new mongoose.Schema({
     brandName: String,
     description: String,
-    photoUrl: {
-        type: String,
-        default: null,
+    image: {
+        type: mongoose.Schema.Types.ObjectId, ref: "Image"
     },
     isActive: {
         type: Boolean,

@@ -2,9 +2,10 @@ const express = require('express');
 const productController = require('./../controller/productController');
 const { productValidation } = require("./../validations/index")
 const productRouter = new express.Router();
-const { tokenVerify, uploadImage, uploadfile, formData, checkRole } = require("./../middleware/index")
+const { tokenVerify, uploadImage, uploadfile , checkRole } = require("./../middleware/index")
 
-/** @swagger
+/** 
+ * @swagger
  *  components:
  *      schemas:
  *          product:
@@ -20,7 +21,7 @@ const { tokenVerify, uploadImage, uploadfile, formData, checkRole } = require(".
  *                  brandId:
  *                      type : string
  *                  categoryId:
- *                      type : number
+ *                      type : string
  *                  productName :
  *                      type : string
  *                  productDetail :
@@ -31,11 +32,11 @@ const { tokenVerify, uploadImage, uploadfile, formData, checkRole } = require(".
  *                      type: string
  *                      format: binary
  *              example :
- *                  brandId: "624e956336d8ce8e2f415006"
- *                  categoryId: "624e956a36d8ce8e2f41500a"
- *                  productName: "SAMSUNG Galaxy Z Fold3 5G (Phantom Black, 512 GB)"
- *                  productDetail: "Qualcomm Snapdragon 888 Octa-Core Processor"
- *                  price : 179999
+ *                  brandId: 
+ *                  categoryId:
+ *                  productName: 
+ *                  productDetail: 
+ *                  price : 
  *      responses:
  *          200:
  *            description: OK

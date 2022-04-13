@@ -2,13 +2,23 @@ const { User } = require('./../models/schema');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
+var cron = require('node-cron');
 const {
   emailSend,
   otpFunction,
   generateToken,
+  emailMsgSend
 } = require('./../middleware/index');
-const { port, host, secretKey } = require('./../config/index');
-const async = require('hbs/lib/async');
+const { port, host, secretKey } = require('./../config/index')
+
+
+cron.schedule('0 1 * * * *', async() => {
+  const result = await User.find({isVerified : true})
+  console.log(result)
+  await emailMsgSend("sourabhlodhi.thoughtwin@gmail.com")
+  console.log('running a task every minute');
+});
+
 
 module.exports = {
   user_signup: async (req, res) => {

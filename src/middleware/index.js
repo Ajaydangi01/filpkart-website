@@ -39,6 +39,9 @@ exports.emailSend = (token, email) => {
     }
   });
 };
+
+
+
 exports.otpFunction = (otp) => {
   let Otp = Math.floor(Math.random() * 1000000 + 1);
   const client = require('twilio')(accountSid, authToken);
@@ -78,9 +81,10 @@ exports.tokenVerify = async (req, res, next) => {
         res.status(400).json({ status: 400, message: 'invalid token', success: false });
       } else {
         const id = info.id;
-        const result = await User.findOne({ id });
+        const result = await User.findOne({ _id: id });
+        // console.log(result)
+        req.user = result
         req.role = result.role
-        // console.log("<<<<<>>>>>" , result.role)
         req.id = result.id
         next()
       }
@@ -93,17 +97,17 @@ exports.tokenVerify = async (req, res, next) => {
 exports.allowTo = (...roles) =>
   (req, res, next) => {
     const { role } = req;
-    console.log(role)
+    // console.log(role)
     if (!roles.includes(role)) {
       return res.status(404).json({ message: "you are not admin", succes: false })
     }
     return next();
   };
 
-  exports.checkRole = (...roles) =>
+exports.checkRole = (...roles) =>
   (req, res, next) => {
     const { role } = req;
-    console.log(role)
+    // console.log(role)
     if (!roles.includes(role)) {
       return res.status(404).json({ message: "you are not seller", succes: false })
     }
@@ -129,6 +133,7 @@ const storage = multer.diskStorage({
   },
 })
 
+
 const upload = multer({
   storage: storage,
   fileFilter: (req, file, cb) => {
@@ -139,7 +144,7 @@ const upload = multer({
       return cb(new Error('Only .png, .jpg and .jpeg format allowed!'));
     }
   }
-}).array("images", 5)
+}).array("image", 5)
 
 exports.uploadImage = (req, res, next) => {
   upload(req, res, (error) => {
@@ -157,11 +162,12 @@ exports.uploadImage = (req, res, next) => {
             return res.status(400).json({ status: 400, message: "Same file not allowed", success: false })
           }
         }
+        req.data = req.body
         next()
       }
     }
     else {
-      return res.status(400).json({ status: 400, message: "Maximum 5 images only", success: false })
+      return res.status(400).json({ status: 400, message: error.message, success: false })
     }
   })
 }
@@ -196,27 +202,96 @@ exports.uploadfile = async (req, res, next) => {
 }
 
 
-20
-exports.formData = (req, res, next) => {
-  upload(req, res, (err) => {
-    if (err) {
-      return next(new ApiError(400, err.message))
+// exports.formData = (req, res, next) => {
+//   upload(req, res, (err) => {
+//     if (err) {
+//       return next(new ApiError(400, err.message))
+//     } else {
+//       req.files = req.files || req.file
+//       req.data = req.data
+//       if (!req.files) {
+//         return next()
+//       } else {
+//         const array = []
+//         for (file of req.files) {
+//           if (array.includes(file.originalname) === false) {
+//             array.push(file.originalname)
+//           } else {
+//             return next(new ApiError(409, "same files are not allowed"))
+//           }
+//         }
+//         next()
+//       }
+//     }
+//   })
+// }
+
+
+const data = multer.diskStorage({
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + file.fieldname + path.extname(file.originalname))
+  },
+})
+
+const uploads = multer({
+  storage: data,
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype == "image/png" || file.mimetype == "image/jpg" || file.mimetype == "image/jpeg") {
+      cb(null, true);
     } else {
-      req.files = req.files || req.file
-      req.body = req.body
-      if (!req.files) {
-        return next()
-      } else {
-        const array = []
-        for (file of req.files) {
-          if (array.includes(file.originalname) === false) {
-            array.push(file.originalname)
-          } else {
-            return next(new ApiError(409, "same files are not allowed"))
-          }
-        }
-        next()
-      }
+      cb(null, false);
+      return cb(new Error('Only .png, .jpg and .jpeg format allowed!'));
+    }
+  }
+}).single("image")
+
+exports.uploadSingleImage = (req, res, next) => {
+  uploads(req, res, (error) => {
+    // console.log(">>>>>>>" , req.file)
+    if (!error) {
+      next()
+    }
+    else {
+      return res.status(400).json({ status: 400, message: error.message, success: false })
     }
   })
 }
+
+
+exports.uploadSingleImage = (req, res, next) => {
+  uploads(req, res, (error) => {
+    // console.log(">>>>>>>" , req.file)
+    if (!error) {
+      next()
+    }
+    else {
+      return res.status(400).json({ status: 400, message: error.message, success: false })
+    }
+  })
+}
+
+
+
+exports.emailMsgSend = async (email) => {
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: mail,
+      pass: pass,
+    },
+  });
+  const options = {
+    from: 'ajaydangi.thoughtwin@gmail.com',
+    to: email,
+    subject: 'flipkart.com',
+    text: "your account is active now."
+  };
+  await transporter.sendMail(options, (err, info) => {
+    if (err) {
+      logger.info(err);
+      return;
+    } else {
+      logger.info('sent' + info.response);
+    }
+  });
+};

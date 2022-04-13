@@ -103,7 +103,7 @@ module.exports = {
             if (result.isVerified === true) {
               if (result.isApprove === true) {
                 const token = generateToken(result.id);
-                res.status(200).json({ status: 200, message: 'Login Successfully', token, role:result.role, success: true });
+                res.status(200).json({ status: 200, message: 'Login Successfully', token, role: result.role, success: true });
               } else {
                 res.status(400).json({ status: 400, message: 'Not verified by admin' });
               }
@@ -220,11 +220,8 @@ module.exports = {
       const { page = 1, limit = 5 } = req.query;
       const { email = '' } = req.body;
       const fileds = showToFields(req);
-      const result = await User.find({ isDeleted: false, email: { $regex: email, $options: '$i' } }, fileds)
-        .limit(limit * 1)
-        .skip((page - 1) * limit)
-        .sort({ createAt: 1 });
-      res.status(200).json({ status: 200, message: result, success: true });
+      const result = await User.find({ isDeleted: false, email: { $regex: email, $options: '$i' } }, fileds).limit(limit * 1).skip((page - 1) * limit).sort({ createAt: 1 });
+      res.status(200).json({ status: 200, message: "All seller list", data: result, success: true });
     } catch (error) {
       res.status(400).json({ status: 400, message: error.message });
     }

@@ -50,14 +50,13 @@ module.exports = {
                         data.image = s.id
                     }
                 }
-                const category = await Category.findById({ _id: req.body.categoryId })
+                const category = await Category.findOne({ _id: req.data.categoryId })
                 if (category) {
-                    const brand = await Brand.findById({ _id: req.body.brandId })
+                    const brand = await Brand.findOne({ _id: req.data.brandId })
                     if (brand) {
                         await data.save()
                         const newdata = await Product.findOne({ _id: data.id })
                             .populate("brandId", "brandName").populate("categoryId", "categoryName").populate("image", "image.photoUrl")
-                        console.log(newdata)
                         return res.status(200).json({ success: true, status: 200, message: 'Product create successfully', data: newdata, });
                     }
                     else {
@@ -84,21 +83,24 @@ module.exports = {
             } else {
                 newFilter = filter
             }
-            const result = await Product.find(newFilter).limit(limit * 1).skip((page - 1) * limit).sort({ createAt: 1 })
+            const regex = new RegExp(req.query.search, "i")
+            // console.log(req.query.search)
+            const result = await Product.find({ $or: [{ "productName": regex }, { "productDetail": regex }, { "price": regex }] }, newFilter).limit(limit * 1).skip((page - 1) * limit).sort({ createAt: 1 })
                 .populate("brandId", "brandName").populate("categoryId", "categoryName").populate("image", "image.photoUrl")
             res.status(200).json({ status: 200, totalProduct: result.length, data: result, success: true });
 
         } catch (error) {
+            console.log(error)
             res.status(400).json({ status: 400, message: error.message, success: false });
         }
     },
 
     showOneProduct: async (req, res) => {
         try {
-                if(ObjectId.isValid(req.params.id)===false){
-                 return res.status(400).json({success : false , status : 400 , message : "invalid id format"})
-            
-                }
+            if (ObjectId.isValid(req.params.id) === false) {
+                return res.status(400).json({ success: false, status: 400, message: "invalid id format" })
+
+            }
             const data = await Product.findById({ _id: req.params.id })
                 .populate("brandId", "brandName").populate("categoryId", "categoryName").populate("image", "image.photoUrl")
             if (data) {
@@ -154,7 +156,8 @@ module.exports = {
                 return res.status(400).json({ status: 400, message: 'Product not found', succes: false, });
             }
             const findProduct = await Image.findOne({ productId: result.id });
-            if (req.files != undefined) {
+            console.log(">>>>>>>>>>" , findProduct)
+            if (req.files.length > 0) {
                 await findProduct.image.map((x) => {
                     cloudinary.uploader.destroy(x.public_id);
                 });
