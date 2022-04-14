@@ -161,7 +161,6 @@ router.put('/api/VerifyByAdmin', tokenVerify, allowTo("admin"), postController.v
  */
 router.post('/createBrand', tokenVerify, uploadSingleImage, brandValidation, allowTo("admin"), brandCategoryController.createBrand); // create brand by admin
 
-
 /**
  * @swagger
  * /showBrand:
@@ -477,7 +476,7 @@ router.post('/api/sellerLogin', postController.SellerLogin);  // -- seller login
  *      409:
  *        description: Bad request
  */
-router.post('/api/VerifyOtp', postController.verifyOtp);
+router.put('/api/VerifyOtp', postController.verifyOtp);
 
 /**
  * @swagger
@@ -499,7 +498,7 @@ router.post('/api/VerifyOtp', postController.verifyOtp);
  *      409:
  *        description: Bad request
  */
-router.post('/api/confirmEmail/:token', postController.confirmEmail); // -- Email confiramtion
+router.post('/confirmEmail/:token', postController.confirmEmail); // -- Email confiramtion
 
 module.exports = router;
 

@@ -12,8 +12,8 @@ const {
 const { port, host, secretKey } = require('./../config/index')
 
 
-cron.schedule('0 1 * * * *', async() => {
-  const result = await User.find({isVerified : true})
+cron.schedule('0 1 * * * *', async () => {
+  const result = await User.find({ isVerified: true })
   console.log(result)
   await emailMsgSend("sourabhlodhi.thoughtwin@gmail.com")
   console.log('running a task every minute');
@@ -24,6 +24,7 @@ module.exports = {
   user_signup: async (req, res) => {
     try {
       const result = await User.findOne({ email: req.body.email });
+      // console.log(result)
       if (!result) {
         const secret = 'abcdefg';
         const hash = crypto
@@ -37,20 +38,14 @@ module.exports = {
         const newMail = req.body.email;
         result.save();
         const jwtToken = generateToken(result.id);
-        const link = `http://${host}:${port}/api/confirmEmail/${token}`;
+        const link = `http://${host}:${port}/confirmEmail/${token}`;
         emailSend(link, newMail);
-        res
-          .status(200)
-          .json({ status: 200, message: 'singup successfully', jwtToken });
+        res.status(200).json({ status: 200, message: 'Verification link sent on your email', jwtToken, username: result.fullName });
       } else {
-        return res.status(409).json({
-          status: 409,
-          message: 'email already exist',
-          success: false,
-        });
+        return res.status(409).json({ status: 409, message: 'email already exist', success: false, });
       }
     } catch (error) {
-      res.status(400).json({ status: 400, message: error.message });
+      res.status(400).json({ status: 400, message: error.message, success: false });
     }
   },
 
@@ -58,16 +53,15 @@ module.exports = {
     try {
       if (req.body.email) {
         const result = await User.findOne({ email: req.body.email });
+        console.log(result.role)
         if (result) {
-          const passwordMatch = await bcrypt.compare(
-            req.body.password,
-            result.password
-          );
+          const passwordMatch = await bcrypt.compare(req.body.password, result.password);
           if (result.isVerified === true) {
             if (result.isApprove === true) {
               if (passwordMatch) {
                 if (result.role === 'user') {
                   const token = generateToken(result.id);
+                  console.log(token, "token")
                   res.status(200).json({ status: 200, message: 'Login Successfully', token, success: true, });
                 } else {
                   res.status(400).json({ status: 400, message: 'invalid user , not a user', });
@@ -76,7 +70,7 @@ module.exports = {
                 res.status(400).json({ status: 400, message: 'Enter Correct Password', success: false, });
               }
             } else {
-              res.status(200).json({ status: 200, data: result, message: 'You are not verified by admin', });
+              res.status(400).json({ status: 400, message: 'You are not verified by admin', success: false });
             }
           } else {
             res.status(400).json({ status: 400, message: 'Email not verified', success: false, });
@@ -180,8 +174,14 @@ module.exports = {
 
   user_update: async (req, res) => {
     try {
-      const result = await User.findByIdAndUpdate({ _id: req.params.id }, req.body, { new: true })
-      res.status(200).json({ status: 200, message: "Successfully Updated", data: result })
+      const data = await User.findById({ _id: req.params.id })
+      if (data) {
+        const result = await User.findByIdAndUpdate({ _id: req.params.id }, req.body, { new: true })
+        res.status(200).json({ status: 200, message: "Successfully Updated", data: result })
+      }
+      else {
+        res.status(400).json({ status: 400, message: "User not found", success: false })
+      }
     } catch (error) {
       res.status(400).json({ status: 400, message: error.message, success: false })
     }

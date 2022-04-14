@@ -70,19 +70,20 @@ exports.generateToken = (id) => {
 exports.tokenVerify = async (req, res, next) => {
   const token = req.headers['authorization'];
   if (!token) {
-    res.status(400).json({ status: 400, message: 'Token is required for authentication', success: false, });
+   return res.status(400).json({ status: 400, message: 'Token is required for authentication', success: false, });
   } else {
     const authHeader = req.headers.authorization;
     const bearerToken = authHeader.split(' ');
     const token = bearerToken[1];
-
     const admin = jwt.verify(token, secretKey, async (error, info) => {
       if (error) {
-        res.status(400).json({ status: 400, message: 'invalid token', success: false });
+       return res.status(400).json({ status: 400, message: 'invalid token', success: false });
       } else {
         const id = info.id;
         const result = await User.findOne({ _id: id });
-        // console.log(result)
+        if(!result){
+         return res.status(401).json({status : 401 , message : "unauthorized access" , success : false})
+        }
         req.user = result
         req.role = result.role
         req.id = result.id

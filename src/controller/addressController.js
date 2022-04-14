@@ -7,7 +7,7 @@ module.exports = {
         try {
             const user = await User.findOne({ number: req.body.number });
             if (user === null) {
-                return res.status(400).json({ status: 400, message: 'enter register number' });
+                return res.status(400).json({ status: 400, message: 'enter register number', success: false });
             }
             const findUser = await Address.findOne({ number: req.body.number });
             if (!findUser) {
@@ -23,7 +23,7 @@ module.exports = {
                 res.status(200).json({ status: 200, message: 'Address added successfully', success: true });
             }
         } catch (error) {
-            res.status(400).json({ status: 400, message: error.message });
+            res.status(400).json({ status: 400, message: error.message, success: false });
         }
     },
 
@@ -38,18 +38,16 @@ module.exports = {
                 newFilter = filter
             }
             const user = await Address.find({}).limit(limit * 1).skip((page - 1) * limit).sort({ createAt: 1 });
-            res.status(200).json({ status: 200, message: user, success: true });
+            res.status(200).json({ status: 200, data: user, success: true });
         } catch (error) {
-            res
-                .status(400)
-                .json({ status: 400, message: error.message, success: false });
+            res.status(400).json({ status: 400, message: error.message, success: false });
         }
     },
 
     update_address: async (req, res) => {
         try {
             const result = await Address.findByIdAndUpdate({ _id: req.params.id }, req.body, { new: true });
-            res.status(200).json({ status: 200, message: 'Address update Successfully' });
+            res.status(200).json({ status: 200, message: 'Address update Successfully', success: true });
         } catch (error) {
             res.status(400).json({ status: 400, message: error.message, success: false });
         }

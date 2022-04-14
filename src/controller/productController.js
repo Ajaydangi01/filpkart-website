@@ -156,7 +156,7 @@ module.exports = {
                 return res.status(400).json({ status: 400, message: 'Product not found', succes: false, });
             }
             const findProduct = await Image.findOne({ productId: result.id });
-            console.log(">>>>>>>>>>" , findProduct)
+            console.log(">>>>>>>>>>", findProduct)
             if (req.files.length > 0) {
                 await findProduct.image.map((x) => {
                     cloudinary.uploader.destroy(x.public_id);

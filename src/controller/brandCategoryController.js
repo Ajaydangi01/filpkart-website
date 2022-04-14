@@ -57,7 +57,8 @@ module.exports = {
             }
             const regex = new RegExp(req.query.search, "i")
             const user = await Brand.find({ $or: [{ "brandName": regex }, { "description": regex }] }, newFilter).limit(limit * 1).skip((page - 1) * limit).sort({ createAt: 1 });
-            res.status(200).json({ status: 200, message: user, success: true });
+            // console.log("<<<>>>" , user)
+            res.status(200).json({ status: 200, message: "All brands", totalBrands: user.length, data: user, success: true });
         } catch (error) {
             res.status(400).json({ status: 400, message: error.message, success: false });
         }
@@ -147,7 +148,7 @@ module.exports = {
             }
             const regex = new RegExp(req.query.search, "i")
             const result = await Category.find({ $or: [{ "categoryName": regex }, { "description": regex }, { "price": regex }] }, newFilter).limit(limit * 1).skip((page - 1) * limit).sort({ createAt: 1 })
-            res.status(200).json({ status: 200, totalProduct: result.length, data: result, success: true });
+            res.status(200).json({ status: 200, message: "All Category", totalCategory: result.length, data: result, success: true });
         } catch (error) {
             res.status(400).json({ status: 400, message: error.message, success: false });
         }

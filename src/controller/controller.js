@@ -6,26 +6,22 @@ const { logger } = require('./../shared/logger');
 const Brand = require("./../models/brandSchema")
 const Category = require("./../models/categorySchema")
 const {
-  emailSend,
-  otpFunction,
-  generateToken,
-  showToFields,
-} = require('../middleware/index');
+  emailSend, otpFunction, generateToken, showToFields, } = require('../middleware/index');
 const { port, host, secretKey } = require('./../config/index');
 const async = require('hbs/lib/async');
 
 module.exports = {
   adminSignup: async (req, res) => {
     try {
-      const email = await User.findOne({ email: req.body.email });
-      if (!email) {
+      const { email, fullName, number, password } = req.body
+      const foundUser = await User.findOne({ email });
+      if (!foundUser) {
         req.body.role = 'admin';
-        const result = new User(req.body);
+        // const{fullName,number, password } = req.body
+        const result = new User({ email, fullName, number, password, role: "admin" });
         result.save();
         const jwtToken = generateToken(result.id);
         res.status(200).json({ status: 200, message: 'singup successfully', jwtToken });
-        // console.log("<<<<>>>>>>><<<<>>>>" , jwtToken)
-        // res.render("adminpanel" , {jwtToken})
       } else {
         return res.status(409).json({ status: 409, message: 'email already exist', success: false, });
       }
@@ -51,9 +47,9 @@ module.exports = {
         result.save();
         console.log(result.id)
         const jwtToken = generateToken(result.id);
-        const link = `http://${host}:${port}/api/confirmEmail/${token}`;
+        const link = `http://${host}:${port}/confirmEmail/${token}`;
         emailSend(link, newMail);
-        res.status(200).json({ status: 200, message: 'singup successfully', jwtToken });
+        res.status(200).json({ status: 200, message: 'Verification link sent on your email', jwtToken });
       } else {
         return res.status(409).json({ status: 409, message: 'email already exist', success: false, });
       }

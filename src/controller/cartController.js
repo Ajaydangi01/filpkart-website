@@ -8,6 +8,10 @@ const redis = new Redis();
 module.exports = {
     createCart: async (req, res) => {
         try {
+            const product = await Product.findOne({ id: req.body.id })
+            if (!product) {
+                return res.status(400).json({ status: 400, message: "product not found", success: false })
+            }
             const result = await Cart.findOne({ productId: req.body.productId, userId: req.body.userId });
             if (result) {
                 result.quantity += 1
@@ -17,7 +21,7 @@ module.exports = {
                 return res.status(200).json({ success: true, status: 200, message: "Product add in cart successfully", data: setRedis })
             }
             const data = await Cart.create(req.body)
-            req.body.userId = data.userId
+            req.body.userId = data.userIdss
             req.body.productId = data.productId
             res.status(200).json({ success: true, status: 200, message: "Product add in cart successfully" })
         } catch (error) {
@@ -29,15 +33,17 @@ module.exports = {
     showCart: async (req, res) => {
         try {
             const { page = 1, limit = 5 } = req.query;
-            const filter = { productId: req.id, isActive: true }
+            const filter = { productId: req.id, isActsive: true }
             let newFilter;
             if (req.query.filter) {
                 newFilter = Object.assign(filter, JSON.parse(req.query.filter))
             } else {
                 newFilter = filter
             }
+            const setRedis = await redis.get("Data")
+            const obj = JSON.parse(setRedis)
             const user = await Cart.find({}).limit(limit * 1).skip((page - 1) * limit).sort({ createAt: 1 });
-            res.status(200).json({ status: 200, totalItem: user.length, data: user, success: true });
+            res.status(200).json({ status: 200, totalItem: user.length, data: obj, success: true });
         } catch (error) {
             res.status(400).json({ status: 400, message: error.message, success: false });
         }
