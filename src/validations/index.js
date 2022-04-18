@@ -119,3 +119,34 @@ exports.brandValidation = (req, res, next) => {
     next();
   }
 };
+
+
+exports.orderValidation = (req, res, next) => {
+  const validateOrder = (order) => {
+    const JoiSchema = Joi.object({
+      productId: Joi.string().required(),
+      addressId: Joi.string().required(),
+      quantity: Joi.number().min(1).max(99).required(),
+    });
+    return JoiSchema.validate(order);
+  };
+  const response = validateOrder(req.body);
+  if (response.error) {
+    const msg = response.error.details[0].message;
+    return res.status(400).json({ status: 400, message: msg });
+  } else {
+    next();
+  }
+};
+
+exports.reviewValidation = (req,res,next) => {
+  const validateReview = (review) => {
+    const JoiSchema = Joi.object({
+      productId : Joi.string().required(),
+      rating : Joi.number().min(1).max(5).required(),
+      comment: Joi.string().required()
+    })
+    return JoiSchema.validate(review);
+  };
+  
+}

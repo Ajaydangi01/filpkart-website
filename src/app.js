@@ -1,9 +1,8 @@
-const http = require('http');
 const cors = require("cors")
 const express = require('express');
 const route = require('./routes/routes');
 const rateLimit = require('express-rate-limit');
-const { userRouter, addressRouter, sellerProRouter, productRouter, cartRouter } = require("./middleware/routefile")
+const { userRouter, addressRouter, sellerProRouter, productRouter, cartRouter, orderRouter, reviewRouter } = require("./middleware/routefile")
 const swaggerUI = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
 const { logger } = require('./shared/logger');
@@ -68,10 +67,19 @@ const option = {
   },
   apis: [`${__dirname}/routes/*.js`],
 };
-app.use('/', route, userRouter, addressRouter, sellerProRouter, productRouter, cartRouter);
+app.use('/', route);
+app.use('/', userRouter);
+app.use('/', addressRouter);
+app.use('/', sellerProRouter);
+app.use('/', productRouter);
+app.use('/', cartRouter);
+app.use('/', orderRouter);
+app.use('/', reviewRouter);
+
+
 
 const specs = swaggerJsDoc(option);
-app.use('/createApi', swaggerUI.serve, swaggerUI.setup(specs));
+app.use('/apiDoc', swaggerUI.serve, swaggerUI.setup(specs));
 
 app.use(function (req, res) {
   var err = new Error('Not Found');
@@ -80,10 +88,9 @@ app.use(function (req, res) {
 
 
 connection()
-  .then((data) => {
+  .then(() => {
     app.listen(port, () => {
-      logger.info(`connection successfull ${host}:${port}`);
-      logger.info('Database connected');
+      logger.info('Connected to database');
     });
   })
   .catch(() => {

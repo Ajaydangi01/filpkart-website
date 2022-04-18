@@ -34,7 +34,7 @@ exports.emailSend = (token, email) => {
       logger.info(err);
       return;
     } else {
-      logger.info('sent' + info.response);
+      logger.info('sentemail' + info.response);
       console.log(fullName)
     }
   });

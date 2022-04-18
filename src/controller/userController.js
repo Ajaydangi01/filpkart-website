@@ -3,12 +3,7 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 var cron = require('node-cron');
-const {
-  emailSend,
-  otpFunction,
-  generateToken,
-  emailMsgSend
-} = require('./../middleware/index');
+const { emailSend, otpFunction, generateToken, emailMsgSend } = require('./../middleware/index');
 const { port, host, secretKey } = require('./../config/index')
 
 
@@ -53,7 +48,7 @@ module.exports = {
     try {
       if (req.body.email) {
         const result = await User.findOne({ email: req.body.email });
-        console.log(result.role)
+        // console.log(result.name)
         if (result) {
           const passwordMatch = await bcrypt.compare(req.body.password, result.password);
           if (result.isVerified === true) {
@@ -61,8 +56,8 @@ module.exports = {
               if (passwordMatch) {
                 if (result.role === 'user') {
                   const token = generateToken(result.id);
-                  console.log(token, "token")
-                  res.status(200).json({ status: 200, message: 'Login Successfully', token, success: true, });
+                  // console.log(token, "token")
+                  res.status(200).json({ status: 200, message: 'Login Successfully', token, success: true, userName : result.fullName });
                 } else {
                   res.status(400).json({ status: 400, message: 'invalid user , not a user', });
                 }

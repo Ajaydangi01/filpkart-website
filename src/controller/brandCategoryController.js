@@ -2,14 +2,9 @@ const Brand = require("./../models/brandSchema")
 const cloudinary = require('cloudinary').v2
 const Category = require("./../models/categorySchema")
 const { Image } = require("./../models/imageSchema")
-const { isUndefined, result } = require('lodash');
+const { isUndefined} = require('lodash');
 const { CloudName, APIKey, APISecret } = require("./../config/index");
-cloudinary.config({
-    cloud_name: CloudName,
-    api_key: APIKey,
-    api_secret: APISecret,
-    secure: true
-});
+cloudinary.config({ cloud_name: CloudName, api_key: APIKey, api_secret: APISecret, secure: true });
 
 module.exports = {
     createBrand: async (req, res) => {

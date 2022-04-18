@@ -3,12 +3,8 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { logger } = require('./../shared/logger');
-const Brand = require("./../models/brandSchema")
-const Category = require("./../models/categorySchema")
-const {
-  emailSend, otpFunction, generateToken, showToFields, } = require('../middleware/index');
+const { emailSend, otpFunction, generateToken, showToFields, } = require('../middleware/index');
 const { port, host, secretKey } = require('./../config/index');
-const async = require('hbs/lib/async');
 
 module.exports = {
   adminSignup: async (req, res) => {
@@ -16,12 +12,12 @@ module.exports = {
       const { email, fullName, number, password } = req.body
       const foundUser = await User.findOne({ email });
       if (!foundUser) {
-        req.body.role = 'admin';
+        // req.body.role = 'admin';
         // const{fullName,number, password } = req.body
         const result = new User({ email, fullName, number, password, role: "admin" });
         result.save();
         const jwtToken = generateToken(result.id);
-        res.status(200).json({ status: 200, message: 'singup successfully', jwtToken });
+        res.status(200).json({ status: 200, message: 'singup successfully',data : result, jwtToken });
       } else {
         return res.status(409).json({ status: 409, message: 'email already exist', success: false, });
       }
@@ -213,7 +209,7 @@ module.exports = {
 
   getAllSellers: async (req, res) => {
     try {
-      const { page = 1, limit = 5 } = req.query;
+      const { page = 1, limit = 10 } = req.query;
       const { email = '' } = req.body;
       const fileds = showToFields(req);
       const result = await User.find({ isDeleted: false, email: { $regex: email, $options: '$i' } }, fileds).limit(limit * 1).skip((page - 1) * limit).sort({ createAt: 1 });
