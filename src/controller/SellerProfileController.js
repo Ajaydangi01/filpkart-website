@@ -13,7 +13,7 @@ module.exports = {
                         req.body.isKYC = true
                         const finalResult = new SellerProfile(req.body)
                         finalResult.save()
-                        res.status(200).json({ status: 200, message: 'Profile update successfully' });
+                        res.status(200).json({ status: 200, message: 'Profile update successfully', data: finalResult });
                     }
                 }
                 else {

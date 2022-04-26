@@ -3,9 +3,11 @@ const cloudinary = require('cloudinary').v2
 const multer = require("multer")
 const { User } = require('../models/schema');
 const { logger } = require('./../shared/logger');
-const OTP = require('../models/schema');
+// const OTP = require('../models/schema');
+const { Product } = require("./../models/productSchema")
 const jwt = require('jsonwebtoken');
 const { htmlcode } = require("./../views/index")
+const { pdfFile } = require("./../views/pdfFile")
 const { mail, pass, accountSid, authToken, sendFrom, sendTo, secretKey, } = require('./../config/index');
 const { CloudName, APIKey, APISecret } = require("./../config/index");
 const path = require('path');
@@ -35,7 +37,6 @@ exports.emailSend = (token, email) => {
       return;
     } else {
       logger.info('sentemail' + info.response);
-      console.log(fullName)
     }
   });
 };
@@ -70,19 +71,62 @@ exports.generateToken = (id) => {
 exports.tokenVerify = async (req, res, next) => {
   const token = req.headers['authorization'];
   if (!token) {
-   return res.status(400).json({ status: 400, message: 'Token is required for authentication', success: false, });
+    return res.status(400).json({ statusCode: 400, message: 'Token is required for authentication', success: false, });
   } else {
     const authHeader = req.headers.authorization;
     const bearerToken = authHeader.split(' ');
     const token = bearerToken[1];
     const admin = jwt.verify(token, secretKey, async (error, info) => {
       if (error) {
-       return res.status(400).json({ status: 400, message: 'invalid token', success: false });
+        return res.status(400).json({ statusCode: 400, message: 'invalid token', success: false });
       } else {
         const id = info.id;
         const result = await User.findOne({ _id: id });
-        if(!result){
-         return res.status(401).json({status : 401 , message : "unauthorized access" , success : false})
+        if (!result) {
+          return res.status(401).json({ statusCode: 401, message: "unauthorized access", success: false })
+        }
+        req.user = result
+        req.role = result.role
+        req.id = result.id
+        next()
+      }
+    });
+
+  }
+};
+
+exports.tokenVerifyForProduct = async (req, res, next) => {
+  const token = req.headers['authorization'];
+  if (!token) {
+    const { page = 1, limit = 5 } = req.query;
+    const filter = { productId: req.id, isActive: true }
+    let newFilter;
+    if (req.query.filter) {
+      newFilter = Object.assign(filter, JSON.parse(req.query.filter))
+    } else {
+      newFilter = filter
+    }
+    const regex = new RegExp(req.query.search, "i")
+    const result = await Product.find({ isApproveByAdmin: true }).limit(limit * 1).skip((page - 1) * limit).sort({ createAt: 1 })
+      .populate("brandId", "brandName").populate("categoryId", "categoryName").populate("image", "image.photoUrl")
+    if (result) {
+      return res.status(200).json({ statusCode: 200, totalProduct: result.length, data: result });
+    }
+    else {
+      return res.status(400).json({ statusCode: 400, message: "no product found", success: false });
+    }
+  } else {
+    const authHeader = req.headers.authorization;
+    const bearerToken = authHeader.split(' ');
+    const token = bearerToken[1];
+    const admin = jwt.verify(token, secretKey, async (error, info) => {
+      if (error) {
+        return res.status(400).json({ statusCode: 400, message: 'invalid token', success: false });
+      } else {
+        const id = info.id;
+        const result = await User.findOne({ _id: id });
+        if (!result) {
+          return res.status(401).json({ statusCode: 401, message: "unauthorized access", success: false })
         }
         req.user = result
         req.role = result.role
@@ -100,7 +144,7 @@ exports.allowTo = (...roles) =>
     const { role } = req;
     // console.log(role)
     if (!roles.includes(role)) {
-      return res.status(404).json({ message: "you are not admin", succes: false })
+      return res.status(404).json({ statusCode: 404, message: "you are not admin", succes: false })
     }
     return next();
   };
@@ -110,7 +154,7 @@ exports.checkRole = (...roles) =>
     const { role } = req;
     // console.log(role)
     if (!roles.includes(role)) {
-      return res.status(404).json({ message: "you are not seller", succes: false })
+      return res.status(404).json({ statusCode: 404, message: "you are not seller", succes: false })
     }
     return next();
   };
@@ -160,7 +204,7 @@ exports.uploadImage = (req, res, next) => {
           if (array.includes(file.originalname) === false) {
             array.push(file.originalname)
           } else {
-            return res.status(400).json({ status: 400, message: "Same file not allowed", success: false })
+            return res.status(400).json({ statusCode: 400, message: "Same file not allowed", success: false })
           }
         }
         req.data = req.body
@@ -168,7 +212,7 @@ exports.uploadImage = (req, res, next) => {
       }
     }
     else {
-      return res.status(400).json({ status: 400, message: error.message, success: false })
+      return res.status(400).json({ statusCode: 400, message: error.message, success: false })
     }
   })
 }
@@ -253,7 +297,7 @@ exports.uploadSingleImage = (req, res, next) => {
       next()
     }
     else {
-      return res.status(400).json({ status: 400, message: error.message, success: false })
+      return res.status(400).json({ statusCode: 400, message: error.message, success: false })
     }
   })
 }
@@ -266,7 +310,7 @@ exports.uploadSingleImage = (req, res, next) => {
       next()
     }
     else {
-      return res.status(400).json({ status: 400, message: error.message, success: false })
+      return res.status(400).json({ statusCode: 400, message: error.message, success: false })
     }
   })
 }
@@ -286,6 +330,32 @@ exports.emailMsgSend = async (email) => {
     to: email,
     subject: 'flipkart.com',
     text: "your account is active now."
+  };
+  await transporter.sendMail(options, (err, info) => {
+    if (err) {
+      logger.info(err);
+      return;
+    } else {
+      logger.info('sent' + info.response);
+    }
+  });
+};
+
+
+exports.sendPdfByEmail = async (data, email) => {
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: mail,
+      pass: pass,
+    },
+  });
+  const options = {
+    from: 'ajaydangi.thoughtwin@gmail.com',
+    to: email,
+    subject: 'flipkart Invoice',
+    text: "Your order has been placed successfully.",
+    html: pdfFile(data)
   };
   await transporter.sendMail(options, (err, info) => {
     if (err) {

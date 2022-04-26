@@ -25,17 +25,16 @@ app.use(express.static('public'));
 app.set('view engine', 'hbs');
 app.set('views', __dirname + '/views');
 
-const createAccountLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 hour
-  max: 15,
-  message: 'Too many attempts , try again after 1 hour"',
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false
-})
-
+// const createAccountLimiter = rateLimit({
+//   windowMs: 1 * 60 * 1000, // 1 hour
+//   max: 15,
+//   message: 'Too many attempts , try again after 1 hour"',
+//   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+//   legacyHeaders: false
+// })
 //  res.status(400).json({ status: 400, message: " success: false })
 
-app.use(createAccountLimiter)
+// app.use(createAccountLimiter)
 const option = {
   definition: {
     openapi: '3.0.0',
@@ -96,3 +95,12 @@ connection()
   .catch(() => {
     logger.info('Database not connected');
   });
+
+
+
+  // const random = Math.floor(Math.random()*(6-3)+3)
+  // console.log(random)
+
+
+
+

@@ -54,7 +54,6 @@ cartRouter.post('/createCart', tokenVerify, cartController.createCart);
  */
 cartRouter.get('/showCart', tokenVerify, cartController.showCart);
 
-
 /**
  * @swagger
  * /deleteCart/{id}:
@@ -73,7 +72,6 @@ cartRouter.get('/showCart', tokenVerify, cartController.showCart);
  *        description: Bad request
  */
 cartRouter.delete('/deleteCart/:id', tokenVerify, cartController.deleteCart);
-
 
 // /**
 //  * @swagger

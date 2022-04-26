@@ -19,22 +19,23 @@ module.exports = {
     createProduct: async (req, res) => {
         try {
             if (!req.body) {
-                return res.status(400).json({ status: 400, message: 'Empty filled not allowed', succes: true });
+                return res.status(400).json({ statusCode: 400, message: 'Empty filled not allowed', succes: true });
             }
             const newresult = await User.findOne({ _id: req.id });
             if (!newresult) {
-                return res.status(400).json({ message: 'invalid sellerId', succes: false });
+                return res.status(400).json({ statusCode: 400, message: 'invalid sellerId', succes: false });
             }
             else {
-                req.body.createdBy = newresult.id
-                const data = new Product(req.body)
+                const createdBy = req.body.createdBy = newresult.id
+                const { brandId, categoryId, productName, productDetail, price, image, quantity } = req.body
+                const data = new Product({ brandId, createdBy, categoryId, productName, productDetail, price, image, quantity, })
                 if (!isUndefined(req.files)) {
                     const imageData = []
                     for (file of req.files) {
                         const fileName = file.destination + "/" + file.filename
                         await cloudinary.uploader.upload(fileName, function (error, result) {
                             if (error) {
-                                res.send(error)
+                                res.status(400).json({ statusCode: 400, message: error })
                             }
                             else {
                                 const obj = {
@@ -57,24 +58,61 @@ module.exports = {
                         await data.save()
                         const newdata = await Product.findOne({ _id: data.id })
                             .populate("brandId", "brandName").populate("categoryId", "categoryName").populate("image", "image.photoUrl")
-                        return res.status(200).json({ success: true, status: 200, message: 'Product create successfully', data: newdata, });
+                        return res.status(200).json({ statusCode: 200, message: 'Product create successfully', data: newdata, });
                     }
                     else {
-                        res.status(400).json({ status: 400, message: "Brand not found", success: false });
+                        res.status(400).json({ statusCode: 400, message: "Brand not found", success: false });
                     }
                 }
                 else {
-                    res.status(400).json({ status: 400, message: "Category not found", success: false });
+                    res.status(400).json({ statusCode: 400, message: "Category not found", success: false });
                 }
             }
         } catch (error) {
-            console.log(error)
-            res.status(400).json({ status: 400, message: error.message, success: false });
+            res.status(400).json({ statusCode: 400, message: error.message, success: false });
         }
     },
 
     showProduct: async (req, res) => {
         try {
+            if (req.role === "seller") {
+                const { page = 1, limit = 5 } = req.query;
+                const filter = { productId: req.id, isActive: true }
+                let newFilter;
+                if (req.query.filter) {
+                    newFilter = Object.assign(filter, JSON.parse(req.query.filter))
+                } else {
+                    newFilter = filter
+                }
+                const regex = new RegExp(req.query.search, "i")
+                const result = await Product.find({ createdBy: req.id }, newFilter).limit(limit * 1).skip((page - 1) * limit).sort({ createAt: 1 })
+                    .populate("brandId", "brandName").populate("categoryId", "categoryName").populate("image", "image.photoUrl")
+                if (result) {
+                    return res.status(200).json({ statusCode: 200, totalProduct: result.length, data: result });
+                }
+                else {
+                    return res.status(400).json({ statusCode: 400, message: "no product found", success: false });
+                }
+            }
+            if (req.role == "user") {
+                const { page = 1, limit = 5 } = req.query;
+                const filter = { productId: req.id, isActive: true }
+                let newFilter;
+                if (req.query.filter) {
+                    newFilter = Object.assign(filter, JSON.parse(req.query.filter))
+                } else {
+                    newFilter = filter
+                }
+                const regex = new RegExp(req.query.search, "i")
+                const result = await Product.find({ isApproveByAdmin: true }).limit(limit * 1).skip((page - 1) * limit).sort({ createAt: 1 })
+                    .populate("brandId", "brandName").populate("categoryId", "categoryName").populate("image", "image.photoUrl")
+                if (result) {
+                    return res.status(200).json({ statusCode: 200, totalProduct: result.length, data: result });
+                }
+                else {
+                    return res.status(400).json({ statusCode: 400, message: "no product found", success: false });
+                }
+            }
             const { page = 1, limit = 5 } = req.query;
             const filter = { productId: req.id, isActive: true }
             let newFilter;
@@ -84,34 +122,34 @@ module.exports = {
                 newFilter = filter
             }
             const regex = new RegExp(req.query.search, "i")
-            // console.log(req.query.search)
-            const result = await Product.find({ $or: [{ "productName": regex }, { "productDetail": regex }, { "price": regex }] }, newFilter).limit(limit * 1).skip((page - 1) * limit).sort({ createAt: 1 })
+            const result = await Product.find(newFilter).limit(limit * 1).skip((page - 1) * limit).sort({ createAt: 1 })
                 .populate("brandId", "brandName").populate("categoryId", "categoryName").populate("image", "image.photoUrl")
-            res.status(200).json({ status: 200, totalProduct: result.length, data: result, success: true });
-
+            if (result) {
+                return res.status(200).json({ statusCode: 200, totalProduct: result.length, data: result });
+            }
+            else {
+                return res.status(400).json({ statusCode: 400, message: "no product found", success: false });
+            }
         } catch (error) {
-            console.log(error)
-            res.status(400).json({ status: 400, message: error.message, success: false });
+            res.status(400).json({ statusCode: 400, message: error.message, success: false });
         }
     },
 
     showOneProduct: async (req, res) => {
         try {
             if (ObjectId.isValid(req.params.id) === false) {
-                return res.status(400).json({ success: false, status: 400, message: "invalid id format" })
-
+                return res.status(400).json({ success: false, statusCode: 400, message: "invalid id format" })
             }
             const data = await Product.findById({ _id: req.params.id })
                 .populate("brandId", "brandName").populate("categoryId", "categoryName").populate("image", "image.photoUrl")
             if (data) {
-                res.status(200).json({ status: 200, message: data, success: true })
+                res.status(200).json({ statusCode: 200, message: "Product find by id", data: data })
             }
             else {
-                res.status(400).json({ status: 400, message: "Product not found", success: false })
+                res.status(400).json({ statusCode: 400, message: "Product not found", success: false })
             }
         } catch (error) {
-            console.log(error)
-            res.status(400).json({ status: 400, message: error.message, success: false })
+            res.status(400).json({ statusCode: 400, message: error.message, success: false })
         }
     },
 
@@ -122,13 +160,12 @@ module.exports = {
             if (data) {
                 const result = await Product.findByIdAndUpdate({ _id: req.params.id }, { isActive: false })
                     .populate("brandId", "brandName").populate("categoryId", "categoryName").populate("image", "image.photoUrl")
-                res.status(200).json({ status: 200, message: "Product deleted successfully", data: result, success: true })
+                res.status(200).json({ statusCode: 200, message: "Product deleted successfully", data: result })
             }
             else if (data) {
                 const result = await Product.findByIdAndUpdate({ _id: req.params.id }, { isActive: false })
                     .populate("brandId", "brandName").populate("categoryId", "categoryName").populate("image", "image.photoUrl")
-                res.status(200).json({ status: 200, message: "Product deleted successfully", data: result, success: true })
-
+                res.status(200).json({ statusCode: 200, message: "Product deleted successfully", data: result })
                 let user = await Image.findOne({ productId: req.params.id });
                 const newData = user.image
                 await newData.map((x) => {
@@ -137,26 +174,24 @@ module.exports = {
                 await user.remove();
             }
             else {
-                res.status(400).json({ status: 400, message: "Product Not Found", success: true });
+                res.status(400).json({ statusCode: 400, message: "Product Not Found", success: true });
             }
         } catch (error) {
-            console.log(error)
-            return res.status(400).json({ status: 400, message: error.message, success: false });
+            return res.status(400).json({ statusCode: 400, message: error.message, success: false });
         }
     },
 
     updateProduct: async (req, res) => {
         try {
             if (Object.keys(req.body).length == 0 && req.files == undefined) {
-                return res.status(400).json({ message: 'please add some fileds', succes: false, });
+                return res.status(400).json({ statusCode: 400, message: 'please add some fileds', succes: false, });
             }
             req.body.images = req.photoUrl;
             const result = await Product.findByIdAndUpdate({ _id: req.params.id }, req.body, { new: true })
             if (!result) {
-                return res.status(400).json({ status: 400, message: 'Product not found', succes: false, });
+                return res.status(400).json({ statusCode: 400, message: 'Product not found', succes: false, });
             }
             const findProduct = await Image.findOne({ productId: result.id });
-            console.log(">>>>>>>>>>", findProduct)
             if (req.files.length > 0) {
                 await findProduct.image.map((x) => {
                     cloudinary.uploader.destroy(x.public_id);
@@ -167,10 +202,22 @@ module.exports = {
             }
             const newResult = await Product.findOne({ _id: result.id })
                 .populate("brandId", "brandName").populate("categoryId", "categoryName").populate("image", "image.photoUrl")
-            return res.status(200).json({ status: 200, message: 'product update successfully', data: newResult, succes: true, });
+            return res.status(200).json({ statusCode: 200, message: 'product update successfully', data: newResult });
         } catch (error) {
-            console.log(error)
-            return res.status(400).json({ status: 400, message: error.message, succes: false, });
+            return res.status(400).json({ statusCode: 400, message: error.message, succes: false, });
+        }
+    },
+
+    productVerify: async (req, res) => {
+        try {
+            const product = await Product.findById({ _id: req.body.id })
+            if (product) {
+                const data = await Product.findByIdAndUpdate({ _id: req.body.id }, { isApproveByAdmin: true }, { new: true })
+                return res.status(200).json({ statusCode: 200, message: "Product verified by admin", data: data })
+            }
+            return res.status(400).json({ statusCode: 400, message: "Product not found", success: false })
+        } catch (error) {
+            return res.status(400).json({ statusCode: 400, message: error.message, succes: false, });
         }
     }
 

@@ -98,7 +98,9 @@ router.post('/api/adminLogin', loginValidation, postController.adminLogin); // -
  *      409:
  *        description: Bad request
  */
-router.get('/api/getAllSellers', tokenVerify, allowTo("admin"), postController.getAllSellers); // -- Admin get all users
+router.get('/api/getAllSellers', tokenVerify, allowTo("admin"), postController.getAllSellers); // -- Admin get all sellers
+
+router.get('/api/getAllUsers', tokenVerify, allowTo("admin"), postController.getAllUsers); // -- Admin get all users
 
 /**
  * @swagger

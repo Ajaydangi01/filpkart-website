@@ -2,6 +2,7 @@ const express = require('express');
 const addressController = require('./../controller/addressController');
 const { addressValidation } = require('./../validations/index');
 const addressRouter = new express.Router();
+const { tokenVerify } = require("./../middleware/index")
 
 // /**
 //  * @swagger
@@ -59,7 +60,7 @@ const addressRouter = new express.Router();
 //  *        description: Bad request
 //  */
 
-addressRouter.post('/createAddress', addressValidation, addressController.create_address);
+addressRouter.post('/createAddress', tokenVerify, addressValidation, addressController.create_address);
 
 /**
  * @swagger
@@ -80,7 +81,7 @@ addressRouter.post('/createAddress', addressValidation, addressController.create
  *      409:
  *        description: Bad request
  */
-addressRouter.get('/showAddress', addressController.show_address);
+addressRouter.get('/showAddress', tokenVerify, addressController.show_address);
 
 /**
  * @swagger
@@ -112,7 +113,7 @@ addressRouter.get('/showAddress', addressController.show_address);
  *      409:
  *        description: Bad request
  */
-addressRouter.put('/updateAddress/:id', addressController.update_address);
+addressRouter.put('/updateAddress/:id', tokenVerify, addressController.update_address);
 
 /**
  * @swagger
@@ -132,8 +133,8 @@ addressRouter.put('/updateAddress/:id', addressController.update_address);
  *      409:
  *        description: Bad request
  */
-addressRouter.delete('/deleteAddress/:id', addressController.delete_address);
+addressRouter.delete('/deleteAddress/:id', tokenVerify, addressController.delete_address);
 
-addressRouter.get('/api/get_Data', addressController.get_Data);
+addressRouter.get('/api/get_Data', tokenVerify, addressController.get_Data);
 
 module.exports = addressRouter;

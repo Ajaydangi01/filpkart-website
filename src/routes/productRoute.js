@@ -2,7 +2,7 @@ const express = require('express');
 const productController = require('./../controller/productController');
 const { productValidation } = require("./../validations/index")
 const productRouter = new express.Router();
-const { tokenVerify, uploadImage, uploadfile , checkRole } = require("./../middleware/index")
+const { tokenVerify, tokenVerifyForProduct, uploadImage, uploadfile, checkRole, allowTo } = require("./../middleware/index")
 
 /** 
  * @swagger
@@ -84,7 +84,7 @@ productRouter.post('/product', tokenVerify, uploadImage, productValidation, prod
  *      400:
  *        description: Bad request
  */
-productRouter.get('/product', tokenVerify, checkRole("seller"), productController.showProduct); //show all product
+productRouter.get('/product', tokenVerifyForProduct, tokenVerify, productController.showProduct); //show all product
 
 
 /**
@@ -153,4 +153,6 @@ productRouter.delete("/product/:id", tokenVerify, productController.deleteProduc
  */
 productRouter.put('/product/:id', tokenVerify, uploadImage, uploadfile, productController.updateProduct); //update product
 
+
+productRouter.put('/verifyProduct', tokenVerify, allowTo("admin"), productController.productVerify)
 module.exports = productRouter;

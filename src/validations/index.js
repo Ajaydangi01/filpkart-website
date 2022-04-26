@@ -4,16 +4,16 @@ exports.signupValidation = (req, res, next) => {
   const validateUser = (user) => {
     const JoiSchema = Joi.object({
       fullName: Joi.string().min(3).max(30).required(),
-      number: Joi.string().min(10).max(10),
+      number: Joi.string().min(10).max(10).message("number must be 10 digit"),
       email: Joi.string().email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } }),
-      password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{6,30}$')).required()
+      password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{6,30}$')).message("Password atleast 6 charcter long").required()
     });
     return JoiSchema.validate(user);
   };
   const response = validateUser(req.body);
   if (response.error) {
     const msg = response.error.details[0].message;
-    return res.status(422).json({ status: 422, message: msg });
+    return res.status(422).json({ statusCode: 422, message: msg });
   } else {
     next();
   }
@@ -25,14 +25,14 @@ exports.loginValidation = (req, res, next) => {
       number: Joi.string().min(10).max(12).optional(),
       email: Joi.string().email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } }).optional(),
       otp: Joi.number(),
-      password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{6,30}$')),
+      password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{6,30}$')).message("Enter valid password"),
     }).or('email', 'number');
     return JoiSchema.validate(user);
   };
   const response = validateUser(req.body);
   if (response.error) {
     const msg = response.error.details[0].message;
-    return res.status(422).json({ status: 422, message: msg });
+    return res.status(422).json({ statusCode: 422, message: msg });
   } else {
     next();
   }
@@ -57,7 +57,7 @@ exports.addressValidation = (req, res, next) => {
   const response = validateAddress(req.body);
   if (response.error) {
     const msg = response.error.details[0].message;
-    return res.status(422).json({ status: 422, message: msg });
+    return res.status(422).json({ statusCode: 422, message: msg });
   } else {
     next();
   }
@@ -75,7 +75,7 @@ exports.sellerProfileValidation = (req, res, next) => {
   const response = validateProfile(req.body);
   if (response.error) {
     const msg = response.error.details[0].message;
-    return res.status(422).json({ status: 422, message: msg });
+    return res.status(422).json({ statusCode: 422, message: msg });
   } else {
     next();
   }
@@ -88,15 +88,16 @@ exports.productValidation = (req, res, next) => {
       brandId: Joi.string().min(3).max(30).required(),
       categoryId: Joi.string().min(2).max(30).required(),
       productName: Joi.string().min(4).max(99).required(),
-      productDetail: Joi.string().min(5).max(200).required(),
-      price: Joi.number().min(1).required()
+      productDetail: Joi.string().min(3).max(200).required(),
+      price: Joi.number().min(1).required(),
+      quantity: Joi.number().required()
     });
     return JoiSchema.validate(product);
   };
   const response = validateProduct(req.data);
   if (response.error) {
     const msg = response.error.details[0].message;
-    return res.status(422).json({ status: 422, message: msg });
+    return res.status(422).json({ statusCode: 422, message: msg });
   } else {
     next();
   }
@@ -114,7 +115,7 @@ exports.brandValidation = (req, res, next) => {
   const response = validateBrand(req.body);
   if (response.error) {
     const msg = response.error.details[0].message;
-    return res.status(422).json({ status: 422, message: msg });
+    return res.status(422).json({ statusCode: 422, message: msg });
   } else {
     next();
   }
@@ -124,29 +125,38 @@ exports.brandValidation = (req, res, next) => {
 exports.orderValidation = (req, res, next) => {
   const validateOrder = (order) => {
     const JoiSchema = Joi.object({
-      productId: Joi.string().required(),
+      product: Joi.array().required(),
       addressId: Joi.string().required(),
-      quantity: Joi.number().min(1).max(99).required(),
+      paymentMode: Joi.string().optional(),
+      deliveryMode: Joi.string().optional()
     });
     return JoiSchema.validate(order);
   };
   const response = validateOrder(req.body);
   if (response.error) {
     const msg = response.error.details[0].message;
-    return res.status(400).json({ status: 400, message: msg });
+    return res.status(400).json({ statusCode: 400, message: msg });
   } else {
     next();
   }
 };
 
-exports.reviewValidation = (req,res,next) => {
+exports.reviewValidation = (req, res, next) => {
   const validateReview = (review) => {
     const JoiSchema = Joi.object({
-      productId : Joi.string().required(),
-      rating : Joi.number().min(1).max(5).required(),
+      productId: Joi.string().required(),
+      rating: Joi.number().min(1).max(5).required(),
       comment: Joi.string().required()
     })
     return JoiSchema.validate(review);
   };
-  
+  const response = validateReview(req.body);
+  if (response.error) {
+    const msg = response.error.details[0].message;
+    return res.status(400).json({ statusCode: 400, message: msg });
+  } else {
+    next();
+  }
 }
+
+

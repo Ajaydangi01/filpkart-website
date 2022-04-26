@@ -19,7 +19,6 @@ module.exports = {
   user_signup: async (req, res) => {
     try {
       const result = await User.findOne({ email: req.body.email });
-      // console.log(result)
       if (!result) {
         const secret = 'abcdefg';
         const hash = crypto
@@ -32,15 +31,14 @@ module.exports = {
         const token = hash;
         const newMail = req.body.email;
         result.save();
-        const jwtToken = generateToken(result.id);
         const link = `http://${host}:${port}/confirmEmail/${token}`;
         emailSend(link, newMail);
-        res.status(200).json({ status: 200, message: 'Verification link sent on your email', jwtToken, username: result.fullName });
+        res.status(200).json({ statusCode: 200, message: 'Verification link sent on your email', username: result.fullName });
       } else {
-        return res.status(409).json({ status: 409, message: 'email already exist', success: false, });
+        return res.status(409).json({ statusCode: 409, message: 'email already exist', success: false, });
       }
     } catch (error) {
-      res.status(400).json({ status: 400, message: error.message, success: false });
+      res.status(400).json({ statusCode: 400, message: error.message, success: false });
     }
   },
 
@@ -48,30 +46,25 @@ module.exports = {
     try {
       if (req.body.email) {
         const result = await User.findOne({ email: req.body.email });
-        // console.log(result.name)
         if (result) {
           const passwordMatch = await bcrypt.compare(req.body.password, result.password);
           if (result.isVerified === true) {
-            if (result.isApprove === true) {
               if (passwordMatch) {
                 if (result.role === 'user') {
                   const token = generateToken(result.id);
-                  // console.log(token, "token")
-                  res.status(200).json({ status: 200, message: 'Login Successfully', token, success: true, userName : result.fullName });
+                  res.status(200).json({ statusCode: 200, message: 'Login Successfully', token, success: true, userName : result.fullName });
                 } else {
-                  res.status(400).json({ status: 400, message: 'invalid user , not a user', });
+                  res.status(400).json({ statusCode: 400, message: 'invalid user , not a user', });
                 }
               } else {
-                res.status(400).json({ status: 400, message: 'Enter Correct Password', success: false, });
+                res.status(400).json({ statusCode: 400, message: 'Enter Correct Password', success: false, });
               }
-            } else {
-              res.status(400).json({ status: 400, message: 'You are not verified by admin', success: false });
-            }
+            
           } else {
-            res.status(400).json({ status: 400, message: 'Email not verified', success: false, });
+            res.status(400).json({ statusCode: 400, message: 'Email not verified', success: false, });
           }
         } else {
-          res.status(400).json({ status: 400, message: 'Email not found', success: false });
+          res.status(400).json({ statusCode: 400, message: 'Email not found', success: false });
         }
       } else if (req.body.number) {
         const result = await User.findOne({ number: req.body.number });
@@ -84,9 +77,9 @@ module.exports = {
             if (result.isVerified === true) {
               if (result.isApprove === true) {
                 const token = generateToken(result.id);
-                res.status(200).json({ status: 200, message: 'Login Successfully', token, success: true, });
+                res.status(200).json({ statusCode: 200, message: 'Login Successfully', token, success: true, });
               } else {
-                res.status(400).json({ status: 400, message: 'Not verified by admin' });
+                res.status(400).json({ statusCode: 400, message: 'Not verified by admin' });
               }
             } else {
               const Otp = otpFunction();
@@ -94,19 +87,19 @@ module.exports = {
                 { number: req.body.number },
                 { otp: Otp, resetTime: new Date(Date.now() + 10 * 60000) }
               );
-              res.status(200).json({ status: 200, message: 'Otp sent on register number', success: true, });
+              res.status(200).json({ statusCode: 200, message: 'Otp sent on register number', success: true, });
             }
           } else {
-            res.status(400).json({ status: 400, message: 'Enter Correct Password', success: false, });
+            res.status(400).json({ statusCode: 400, message: 'Enter Correct Password', success: false, });
           }
         } else {
-          res.status(404).json({ status: 404, message: 'User not register', success: false, });
+          res.status(404).json({ statusCode: 404, message: 'User not register', success: false, });
         }
       } else {
-        res.status(400).json({ status: 400, message: 'Enter number/email', success: false });
+        res.status(400).json({ statusCode: 400, message: 'Enter number/email', success: false });
       }
     } catch (error) {
-      res.status(400).json({ status: 400, message: error.message, success: false });
+      res.status(400).json({ statusCode: 400, message: error.message, success: false });
     }
   },
 
@@ -127,10 +120,10 @@ module.exports = {
           success: true,
         });
       } else {
-        res.status(400).json({ status: 400, message: 'Bad request', success: false });
+        res.status(400).json({ statusCode: 400, message: 'Bad request', success: false });
       }
     } catch (error) {
-      res.status(400).json({ status: 400, message: 'Insert valid token', success: false });
+      res.status(400).json({ statusCode: 400, message: 'Insert valid token', success: false });
     }
   },
 
@@ -145,25 +138,25 @@ module.exports = {
           if (result.isVerified === true) {
             res
               .status(200)
-              .json({ status: 200, message: "You're already verified" });
+              .json({ statusCode: 200, message: "You're already verified" });
           } else if (findotp === matchOtp) {
             const newResult = await User.findOneAndUpdate(
               { number: req.body.number },
               { isVerified: true }
             );
             const link = `number verification successfull`;
-            res.status(200).json({ status: 200, message: 'Number Verified Successfully' });
+            res.status(200).json({ statusCode: 200, message: 'Number Verified Successfully' });
           } else {
-            res.status(400).json({ status: 400, messsage: 'Enter Correct OTP', success: false, });
+            res.status(400).json({ statusCode: 400, messsage: 'Enter Correct OTP', success: false, });
           }
         } else {
-          res.status(400).json({ status: 400, message: 'Otp expire , otp resend after 10 min', });
+          res.status(400).json({ statusCode: 400, message: 'Otp expire , otp resend after 10 min', });
         }
       } else {
-        res.status(400).json({ status: 400, message: 'Enter Correct Number' });
+        res.status(400).json({ statusCode: 400, message: 'Enter Correct Number' });
       }
     } catch (error) {
-      res.status(400).json({ status: 400, message: error.message, success: false });
+      res.status(400).json({ statusCode: 400, message: error.message, success: false });
     }
   },
 
@@ -172,13 +165,13 @@ module.exports = {
       const data = await User.findById({ _id: req.params.id })
       if (data) {
         const result = await User.findByIdAndUpdate({ _id: req.params.id }, req.body, { new: true })
-        res.status(200).json({ status: 200, message: "Successfully Updated", data: result })
+        res.status(200).json({ statusCode: 200, message: "Successfully Updated", data: result })
       }
       else {
-        res.status(400).json({ status: 400, message: "User not found", success: false })
+        res.status(400).json({ statusCode: 400, message: "User not found", success: false })
       }
     } catch (error) {
-      res.status(400).json({ status: 400, message: error.message, success: false })
+      res.status(400).json({ statusCode: 400, message: error.message, success: false })
     }
   }
 };

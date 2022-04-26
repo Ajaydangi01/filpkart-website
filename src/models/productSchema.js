@@ -6,13 +6,12 @@ const productSchema = new mongoose.Schema({
     createdBy: String,
     productName: String,
     productDetail: String,
-    price: String,
+    price: Number,
     quantity: Number,
-    rating: String,
     image: {
         type: mongoose.Schema.Types.ObjectId, ref: "Image"
     },
-    isApprove: {
+    isApproveByAdmin: {
         type: Boolean,
         default: false,
     },
@@ -29,7 +28,8 @@ const productSchema = new mongoose.Schema({
         type: Date,
         required: true,
         default: Date.now,
-    }
+    },
+    deliveryDate : Date
 });
 
 const Product = mongoose.model('Product', productSchema);
