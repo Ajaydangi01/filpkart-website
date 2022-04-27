@@ -139,24 +139,24 @@ exports.orderValidation = (req, res, next) => {
   } else {
     next();
   }
-};
+}
 
 exports.reviewValidation = (req, res, next) => {
   const validateReview = (review) => {
     const JoiSchema = Joi.object({
+      image: Joi.string().optional(),
       productId: Joi.string().required(),
       rating: Joi.number().min(1).max(5).required(),
       comment: Joi.string().required()
-    })
+    });
     return JoiSchema.validate(review);
   };
   const response = validateReview(req.body);
   if (response.error) {
     const msg = response.error.details[0].message;
-    return res.status(400).json({ statusCode: 400, message: msg });
+    return res.status(422).json({ statusCode: 422, message: msg });
   } else {
     next();
   }
-}
-
+};
 

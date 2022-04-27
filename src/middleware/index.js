@@ -3,7 +3,6 @@ const cloudinary = require('cloudinary').v2
 const multer = require("multer")
 const { User } = require('../models/schema');
 const { logger } = require('./../shared/logger');
-// const OTP = require('../models/schema');
 const { Product } = require("./../models/productSchema")
 const jwt = require('jsonwebtoken');
 const { htmlcode } = require("./../views/index")
@@ -108,14 +107,12 @@ exports.tokenVerifyForProduct = async (req, res, next) => {
     }
     const regex = new RegExp(req.query.search, "i")
     const result = await Product.find({ isApproveByAdmin: true }).limit(limit * 1).skip((page - 1) * limit).sort({ createAt: 1 })
-      .populate("brandId", "brandName").populate("categoryId", "categoryName").populate("image", "image.photoUrl")
+      .populate("brandId", "brandName").populate("categoryId", "categoryName").populate("image", "image.photoUrl").populate("review", "rating")
     if (result) {
       return res.status(200).json({ statusCode: 200, totalProduct: result.length, data: result });
     }
-    else {
-      return res.status(400).json({ statusCode: 400, message: "no product found", success: false });
-    }
-  } else {
+  }
+  else {
     const authHeader = req.headers.authorization;
     const bearerToken = authHeader.split(' ');
     const token = bearerToken[1];
@@ -142,7 +139,6 @@ exports.tokenVerifyForProduct = async (req, res, next) => {
 exports.allowTo = (...roles) =>
   (req, res, next) => {
     const { role } = req;
-    // console.log(role)
     if (!roles.includes(role)) {
       return res.status(404).json({ statusCode: 404, message: "you are not admin", succes: false })
     }
@@ -152,7 +148,6 @@ exports.allowTo = (...roles) =>
 exports.checkRole = (...roles) =>
   (req, res, next) => {
     const { role } = req;
-    // console.log(role)
     if (!roles.includes(role)) {
       return res.status(404).json({ statusCode: 404, message: "you are not seller", succes: false })
     }
@@ -177,7 +172,6 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + file.fieldname + path.extname(file.originalname))
   },
 })
-
 
 const upload = multer({
   storage: storage,
@@ -217,8 +211,6 @@ exports.uploadImage = (req, res, next) => {
   })
 }
 
-
-
 exports.uploadfile = async (req, res, next) => {
   if (req.files) {
     const imageArray = req.files
@@ -246,32 +238,6 @@ exports.uploadfile = async (req, res, next) => {
   }
 }
 
-
-// exports.formData = (req, res, next) => {
-//   upload(req, res, (err) => {
-//     if (err) {
-//       return next(new ApiError(400, err.message))
-//     } else {
-//       req.files = req.files || req.file
-//       req.data = req.data
-//       if (!req.files) {
-//         return next()
-//       } else {
-//         const array = []
-//         for (file of req.files) {
-//           if (array.includes(file.originalname) === false) {
-//             array.push(file.originalname)
-//           } else {
-//             return next(new ApiError(409, "same files are not allowed"))
-//           }
-//         }
-//         next()
-//       }
-//     }
-//   })
-// }
-
-
 const data = multer.diskStorage({
   filename: (req, file, cb) => {
     cb(null, Date.now() + file.fieldname + path.extname(file.originalname))
@@ -292,7 +258,6 @@ const uploads = multer({
 
 exports.uploadSingleImage = (req, res, next) => {
   uploads(req, res, (error) => {
-    // console.log(">>>>>>>" , req.file)
     if (!error) {
       next()
     }

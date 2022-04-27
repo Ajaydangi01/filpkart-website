@@ -24,7 +24,7 @@ exports.createOrder = async (req, res) => {
         for (i of req.body.product) {
             const findPro = await Product.findOne({ _id: i.productId })
             if (findPro.quantity < i.quantity) {
-                return res.status(400).json({ statusCode: 200, message: "quantity out of stock", success: false })
+                return res.status(400).json({ statusCode: 200, message: "Product quantity out of stock", success: false })
             }
             findPro.quantity -= i.quantity
             findPro.save()
@@ -46,7 +46,6 @@ exports.createOrder = async (req, res) => {
         if (data.price < 500) {
             return res.status(200).json({ statusCode: 200, message: "order placed successfully", totalPrice: `${sum} 40₹ Delivery charges included`, deliveryDate: data.deliveryMode, data: data })
         }
-        console.log(data)
         sendPdfByEmail(data, email)
         return res.status(200).json({ statusCode: 200, message: "order placed successfully", totalPrice: `${sum} + Free Delivery`, deliveryDate: data.deliveryMode, data: data })
     } catch (error) {

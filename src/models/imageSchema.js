@@ -1,12 +1,13 @@
 const { string } = require('joi');
 const mongoose = require('mongoose');
 const imageSchema = new mongoose.Schema({
-    productId : String,
-    categoryId :String,
-    brandId :String,
-    image:[ {
-        photoUrl :String,
-        public_id : String
+    productId: String,
+    categoryId: String,
+    brandId: String,
+    reviewId: String,
+    image: [{
+        photoUrl: String,
+        public_id: String
     }],
     createdAt: {
         type: Date,

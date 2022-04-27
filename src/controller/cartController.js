@@ -10,20 +10,34 @@ module.exports = {
             const { product } = req.body
             const proLength = product.length
             const productIdArr = product.map((obj) => obj.productId)
+            let findCart = await Cart.findOne({ userId: req.id })
             const findproduct = await Product.find({ _id: { $in: productIdArr } })
             if (findproduct.length < proLength) {
-                return res.status(400).json({ statusCode: 400, message: "product not found", success: false })
+                return res.status(400).json({ statusCode: 400, message: "product not found" })
             }
+            let totalPrice = 0;
             for (i of req.body.product) {
                 const findPro = await Product.findOne({ _id: i.productId })
                 if (findPro.quantity < i.quantity) {
-                    return res.status(400).json({ statusCode: 200, message: " product quantity out of stock", success: false })
+                    return res.status(400).json({ statusCode: 200, message: " product quantity out of stock" })
                 }
+                const amount = parseInt(findPro.price * i.quantity);
+                i.price = amount;
+                totalPrice += amount;
             }
-            const data = new Cart({ product, userId: req.id })
-            const result1 = await data.save()
-            res.status(200).json({ statusCode: 200, message: "Product add in cart successfully", data: result1 })
+            req.body.userId = req.id;
+            let createCart;
+            if (!findCart) {
+                createCart = await Cart.create({ product, userId: req.id });
+                return res.status(200).json({ statusCode: 200, message: "Product add in cart successfully", data: createCart, totalPrice: totalPrice });
+            }
+            for (i of product) {
+                findCart.product.push(i)
+            }
+            createCart = await findCart.save();
+            res.status(200).json({ statusCode: 200, message: "Product add in cart successfully", data: createCart, totalPrice: totalPrice })
         } catch (error) {
+            console.log(error)
             res.status(400).json({ statusCode: 400, message: error.message });
         }
     },
@@ -43,7 +57,7 @@ module.exports = {
             res.status(200).json({ statusCode: 200, totalItem: user.length, data: user });
         } catch (error) {
             console.log(error)
-            res.status(400).json({ statusCode: 400, message: error.message, success: false });
+            res.status(400).json({ statusCode: 400, message: error.message });
         }
     },
 
@@ -55,10 +69,10 @@ module.exports = {
                 res.status(200).json({ statusCode: 200, message: "Cart deleted successfully", data: newResult })
             }
             else {
-                res.status(400).json({ statusCode: 400, message: "Nothing in cart", success: false });
+                res.status(400).json({ statusCode: 400, message: "Nothing in cart" });
             }
         } catch (error) {
-            res.status(400).json({ statusCode: 400, message: error.message, success: false });
+            res.status(400).json({ statusCode: 400, message: error.message });
         }
     },
 
@@ -66,13 +80,13 @@ module.exports = {
         try {
             const data = await Cart.findOne({ userId: req.params.id })
             if (!data) {
-                return res.status(400).json({ statusCode: 400, message: "Cart not found", success: false });
+                return res.status(400).json({ statusCode: 400, message: "Cart not found" });
             }
             const result = await Cart.remove({ userId: req.params.id })
             return res.status(200).json({ statusCode: 200, message: "Cart delete successfully", data: result })
         } catch (error) {
             console.log(error)
-            return res.status(400).json({ statusCode: 400, message: error.message, success: false })
+            return res.status(400).json({ statusCode: 400, message: error.message })
         }
     },
 
@@ -84,7 +98,6 @@ module.exports = {
                 return res.status(400).json({ statusCode: 400, message: 'inavalid cart id' });
             }
             const findObjId = result.product.find((obj) => {
-                console.log(obj)
                 const newId = obj._id.toString().replace(/new ObjectId/, "")
                 return newId == req.params.id
             })
@@ -119,41 +132,3 @@ module.exports = {
         }
     }
 }
-
-
-
-
-
-
-
-
- // updateCart: async (req, res) => {
-    //     try {
-    //         const result = await Cart.findById({ _id: req.params.id });
-    //         const findData = result.product.map((obj) => obj.productId)
-    //         if (!result) {
-    //             return res.status(400).json({ statusCode: 400, message: 'cart not found', succes: false });
-    //         }
-    //         const findProduct = await Product.find({ _id: findData });
-    //         if (req.query)
-    //             if (req.query.value === 'increment') {
-    //                 result.quantity += 1;
-    //                 if (findProduct.quantity < result.quantity) {
-    //                     return res.status(400).json({ statusCode: 400, message: 'out of stock', succes: false });
-    //                 }
-    //                 await result.save();
-    //                 const increment = await Cart.findOne({ _id: result.id });
-    //                 return res.status(200).json({ statusCode: 200, message: 'update cart successfully', data: increment, });
-    //             }
-    //         if (0 == result.quantity) {
-    //             return res.status(400).json({ statusCode: 400, message: 'quantity cloud not be less than zero', succes: false });
-    //         }
-    //         result.quantity -= 1;
-    //         await result.save();
-    //         const increment = await Cart.findOne({ _id: result.id });
-    //         return res.status(200).json({ statusCode: 200, message: 'find cart successfully', data: increment });
-    //     } catch (error) {
-    //         console.log(error);
-    //         return res.status(400).json({ statusCode: 400, message: error.message, succes: false });
-    //     }
-    // },

@@ -1,4 +1,4 @@
-const { array } = require('joi');
+const { array, string } = require('joi');
 const mongoose = require('mongoose');
 const productSchema = new mongoose.Schema({
     brandId: { type: mongoose.Schema.Types.ObjectId, ref: "Brand" },
@@ -8,6 +8,8 @@ const productSchema = new mongoose.Schema({
     productDetail: String,
     price: Number,
     quantity: Number,
+    rating: Number,
+    review: [ { type: mongoose.Schema.Types.ObjectId, ref: "Review" }    ],
     image: {
         type: mongoose.Schema.Types.ObjectId, ref: "Image"
     },
@@ -29,7 +31,7 @@ const productSchema = new mongoose.Schema({
         required: true,
         default: Date.now,
     },
-    deliveryDate : Date
+    deliveryDate: Date
 });
 
 const Product = mongoose.model('Product', productSchema);
