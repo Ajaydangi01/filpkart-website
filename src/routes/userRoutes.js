@@ -134,9 +134,9 @@ userRouter.get('/confirmEmail/:token', userController.confirm_email);
  *      409:
  *        description: Bad request
  */
-userRouter.post('/verify_otp', loginValidation, userController.verify_otp);
+userRouter.post('/verifyOtp', loginValidation, userController.verify_otp);
 
-userRouter.put('/user_update/:id', userController.user_update);
+userRouter.put('/userUpdate/:id', userController.user_update);
 
 // userRouter.put("/sendMessage" , userController.sendMessage)
 

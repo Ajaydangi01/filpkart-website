@@ -26,7 +26,8 @@ module.exports = {
         } catch (error) {
             res.status(400).json({ status: 400, message: error.message });
         }
-    },
+    }
+}
 
     // show_profile: async (req, res) => {
     //     try {
@@ -46,4 +47,3 @@ module.exports = {
     //         res.status(400).json({ status: 400, message: error.message, success: false });
     //     }
     // }
-}

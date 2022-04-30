@@ -14,7 +14,7 @@ const secretKey = process.env.KEY;
 const CloudName = process.env.CLOUD_NAME;
 const APIKey = process.env.CLOUD_API_KEY;
 const APISecret = process.env.CLOUD_API_SECRET;
-
+const {handleError} = require("./handleError")
 
 module.exports = {
   port,
@@ -31,5 +31,6 @@ module.exports = {
   secretKey,
   CloudName,
   APIKey,
-  APISecret
+  APISecret,
+  handleError
 };

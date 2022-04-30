@@ -1,11 +1,11 @@
 const { Cart } = require("./../models/cartSchema")
 const { Product } = require("./../models/productSchema")
+const SendError = require("../config/apierror")
 
 const Redis = require("ioredis");
 const redis = new Redis();
-
 module.exports = {
-    createCart: async (req, res) => {
+    createCart: async (req, res, next) => {
         try {
             const { product } = req.body
             const proLength = product.length
@@ -13,13 +13,13 @@ module.exports = {
             let findCart = await Cart.findOne({ userId: req.id })
             const findproduct = await Product.find({ _id: { $in: productIdArr } })
             if (findproduct.length < proLength) {
-                return res.status(400).json({ statusCode: 400, message: "product not found" })
+                return next(new SendError(400, "product not found"))
             }
             let totalPrice = 0;
             for (i of req.body.product) {
                 const findPro = await Product.findOne({ _id: i.productId })
                 if (findPro.quantity < i.quantity) {
-                    return res.status(400).json({ statusCode: 200, message: " product quantity out of stock" })
+                    return next(new SendError(400, "product quantity out of stock"))
                 }
                 const amount = parseInt(findPro.price * i.quantity);
                 i.price = amount;
@@ -53,7 +53,7 @@ module.exports = {
                 newFilter = filter
             }
             const setRedis = await redis.get("Data")
-            const user = await Cart.find({}).limit(limit * 1).skip((page - 1) * limit).sort({ createAt: 1 });
+            const user = await Cart.find({}).limit(limit * 1).skip((page - 1) * limit).sort({ createAt: 1 }).populate("product.productId", "productName productDetail price")
             res.status(200).json({ statusCode: 200, totalItem: user.length, data: user });
         } catch (error) {
             console.log(error)
@@ -61,26 +61,27 @@ module.exports = {
         }
     },
 
-    deleteCart: async (req, res) => {
+    deleteCart: async (req, res, next) => {
         try {
-            const result = await Cart.findById({ _id: req.params.id })
-            if (result) {
-                const newResult = await Cart.findByIdAndDelete({ _id: req.params.id })
-                res.status(200).json({ statusCode: 200, message: "Cart deleted successfully", data: newResult })
+            const { id: _id } = req.params
+            const result = await Cart.updateOne({ userId: req.id }, { $pull: { product: { _id } } }, { new: true })
+            console.log(result)
+            if (result.modifiedCount === 0) {
+                return next(new SendError(400, "product not found in cart"))
             }
             else {
-                res.status(400).json({ statusCode: 400, message: "Nothing in cart" });
+                return res.status(200).json({ statusCode: 200, message: "Cart deleted successfully", data: result })
             }
         } catch (error) {
             res.status(400).json({ statusCode: 400, message: error.message });
         }
     },
 
-    deleteAllCart: async (req, res) => {
+    deleteAllCart: async (req, res, next) => {
         try {
             const data = await Cart.findOne({ userId: req.params.id })
             if (!data) {
-                return res.status(400).json({ statusCode: 400, message: "Cart not found" });
+                return next(new SendError(400, "user not found"))
             }
             const result = await Cart.remove({ userId: req.params.id })
             return res.status(200).json({ statusCode: 200, message: "Cart delete successfully", data: result })

@@ -8,7 +8,7 @@ const swaggerJsDoc = require('swagger-jsdoc');
 const { logger } = require('./shared/logger');
 const { connection } = require('./config/db');
 const app = express();
-const { port, host } = require('./config/index');
+const { port, host, handleError } = require('./config/index');
 const hbs = require('hbs');
 
 const corsOptions = {
@@ -17,7 +17,7 @@ const corsOptions = {
   optionSuccessStatus: 200
 }
 
-// app.use(cors(corsOptions));
+app.use(cors(corsOptions))
 app.use(cors('*'))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
@@ -25,16 +25,15 @@ app.use(express.static('public'));
 app.set('view engine', 'hbs');
 app.set('views', __dirname + '/views');
 
-// const createAccountLimiter = rateLimit({
-//   windowMs: 1 * 60 * 1000, // 1 hour
-//   max: 15,
-//   message: 'Too many attempts , try again after 1 hour"',
-//   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-//   legacyHeaders: false
-// })
-//  res.status(400).json({ status: 400, message: " success: false })
+const createAccountLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 hour
+  max: 20,
+  message: 'Too many attempts , try again after 1 hour"',
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false
+})
 
-// app.use(createAccountLimiter)
+app.use(createAccountLimiter)
 const option = {
   definition: {
     openapi: '3.0.0',
@@ -79,7 +78,7 @@ app.use('/', reviewRouter);
 
 const specs = swaggerJsDoc(option);
 app.use('/apiDoc', swaggerUI.serve, swaggerUI.setup(specs));
-
+app.use(handleError)
 app.use(function (req, res) {
   var err = new Error('Not Found');
   res.status(404).json({ status: 404, message: err.message });
@@ -95,12 +94,6 @@ connection()
   .catch(() => {
     logger.info('Database not connected');
   });
-
-
-
-  // const random = Math.floor(Math.random()*(6-3)+3)
-  // console.log(random)
-
 
 
 

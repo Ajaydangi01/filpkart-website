@@ -2,6 +2,7 @@ const Brand = require("./../models/brandSchema")
 const cloudinary = require('cloudinary').v2
 const Category = require("./../models/categorySchema")
 const { Image } = require("./../models/imageSchema")
+const SendError = require("../config/apierror")
 const { isUndefined } = require('lodash');
 const { CloudName, APIKey, APISecret } = require("./../config/index");
 cloudinary.config({ cloud_name: CloudName, api_key: APIKey, api_secret: APISecret, secure: true });
@@ -11,7 +12,7 @@ module.exports = {
         try {
             const result = await Brand.findOne({ brandName: req.body.brandName });
             if (result) {
-                return res.status(400).json({ statusCode: 200, message: 'Brand already exist', succes: false, });
+                return res.status(400).json({ statusCode: 200, message: 'Brand already exist' });
             }
             const createBrand = await Brand.create(req.body)
             if (!isUndefined(req.file)) {
@@ -50,60 +51,62 @@ module.exports = {
                 newFilter = filter
             }
             const regex = new RegExp(req.query.search, "i")
-            const user = await Brand.find({ $or: [{ "brandName": regex }, { "description": regex }] }, newFilter).limit(limit * 1).skip((page - 1) * limit).sort({ createAt: 1 });
+            const user = await Brand.find({ $or: [{ "brandName": regex }, { "description": regex }] }).limit(limit * 1).skip((page - 1) * limit).sort({ createAt: 1 });
             res.status(200).json({ statusCode: 200, message: "All brands", totalBrands: user.length, data: user });
         } catch (error) {
-            res.status(400).json({ statusCode: 400, message: error.message, success: false });
+            res.status(400).json({ statusCode: 400, message: error.message });
         }
     },
 
-    showOneBrand: async (req, res) => {
+    showOneBrand: async (req, res , next) => {
         try {
             const result = await Brand.findById({ _id: req.params.id })
-            if (result) {
-                res.status(200).json({ statusCode: 200, message: "Brand find by id", data: result })
+            if (!result) {
+                return next(new SendError(400, "Brand not found"))
             }
             else {
-                res.status(400).json({ statusCode: 400, message: "Brand not found", success: false })
+                res.status(200).json({ statusCode: 200, message: "Brand find by id", data: result })
             }
         } catch (error) {
-            res.status(400).json({ statusCode: 400, message: error.message, success: false })
+            res.status(400).json({ statusCode: 400, message: error.message })
         }
     },
 
-    deleteBrand: async (req, res) => {
+    deleteBrand: async (req, res , next) => {
         try {
             const result = await Brand.findByIdAndDelete({ _id: req.params.id })
+            if (!result) {
+                return next(new SendError(400, "Brand not found"))
+            }
             res.status(200).json({ statusCode: 200, message: "Brand deleted successfully", data: result })
         } catch (error) {
-            console.log(error)
-            res.status(400).json({ statusCode: 400, message: error.message, success: false });
+            res.status(400).json({ statusCode: 400, message: error.message });
         }
     },
 
-    updateBrand: async (req, res) => {
+    updateBrand: async (req, res, next) => {
         try {
-            console.log(req.body)
             const data = await Brand.findById({ _id: req.params.id })
-            if (data) {
+            if (!data) {
+                return next(new SendError(400, "Brand not found"))
+            }
+            else {
                 const result = await Brand.findByIdAndUpdate({ _id: req.params.id }, req.body, { new: true })
                 res.status(200).json({ statusCode: 200, message: "Brand update successfully", data: result });
             }
-            else {
-                res.status(400).json({ statusCode: 400, message: "Brand not found", success: true });
-            }
         } catch (error) {
-            res.status(400).json({ statusCode: 400, message: error.message, success: false });
+            res.status(400).json({ statusCode: 400, message: error.message });
         }
     },
 
-    createCategory: async (req, res) => {
+    createCategory: async (req, res, next) => {
         try {
             const result = await Category.findOne({ categoryName: req.body.categoryName });
             if (result) {
-                return res.status(400).json({ statusCode: 200, message: 'Category already exist', data: result });
+                return next(new SendError(400, "Category already exist"))
             }
-            const createBrand = await Category.create(req.body)
+            const{categoryName , description} = req.body
+            const createBrand = await Category.create({categoryName , description})
             if (!isUndefined(req.file)) {
                 const fileName = req.file.destination + "/" + req.file.filename
                 const imageData = []
@@ -122,7 +125,7 @@ module.exports = {
                 const s = await Image.create({ categoryId: createBrand.id, image: imageData })
             }
             const newdata = await Category.findOne({ _id: createBrand.id })
-            return res.status(200).json({ statusCode: 200, message: ' Category create successfully', data: newdata,  });
+            return res.status(200).json({ statusCode: 200, message: ' Category create successfully', data: newdata, });
         } catch (error) {
             console.log(error)
             return res.status(400).json({ statusCode: 400, message: error.message, succes: false, });
@@ -140,48 +143,52 @@ module.exports = {
                 newFilter = filter
             }
             const regex = new RegExp(req.query.search, "i")
-            const result = await Category.find({ $or: [{ "categoryName": regex }, { "description": regex }, { "price": regex }] }, newFilter).limit(limit * 1).skip((page - 1) * limit).sort({ createAt: 1 })
-            res.status(200).json({ statusCode: 200, message: "All Category", totalCategory: result.length, data: result});
+            const result = await Category.find({ $or: [{ "categoryName": regex }, { "description": regex }, { "price": regex }] }).limit(limit * 1).skip((page - 1) * limit).sort({ createAt: 1 })
+            res.status(200).json({ statusCode: 200, message: "All Category", totalCategory: result.length, data: result });
         } catch (error) {
-            res.status(400).json({ statusCode: 400, message: error.message, success: false });
+            res.status(400).json({ statusCode: 400, message: error.message });
         }
     },
 
-    show_one_category: async (req, res) => {
+    show_one_category: async (req, res,next) => {
         try {
             const result = await Category.findById({ _id: req.params.id })
-            if (result) {
-                res.status(200).json({ statusCode: 200, message: "Category find by id" , data: result,  })
+            if (!result) {
+                return next(new SendError(400, "Category not found"))
             }
             else {
-                res.status(400).json({ statusCode: 400, message: "Category not found", success: false })
+                res.status(200).json({ statusCode: 200, message: "Category find by id", data: result, })
             }
         } catch (error) {
-            res.status(400).json({ status: 400, message: error.message, success: false })
+            res.status(400).json({ status: 400, message: error.message })
         }
     },
 
-    delete_category: async (req, res) => {
+    delete_category: async (req, res,next) => {
         try {
             const result = await Category.findByIdAndDelete({ _id: req.params.id })
-            res.status(200).json({ statusCode: 200, message: "Category deleted successfully"  , data : result})
+            if (!result) {
+                return next(new SendError(400, "Category not found"))
+            }
+            res.status(200).json({ statusCode: 200, message: "Category deleted successfully", data: result })
         } catch (error) {
-            res.status(400).json({ statusCode: 400, message: error.message, success: false });
+            res.status(400).json({ statusCode: 400, message: error.message });
         }
     },
 
-    update_category: async (req, res) => {
+    update_category: async (req, res,next) => {
         try {
             const data = await Category.findById({ _id: req.params.id })
-            if (data) {
-                const result = await Category.findByIdAndUpdate({ _id: req.params.id }, req.body, { new: true })
-                res.status(200).json({ statusCode: 200, message: "Category update successfully", data: result });
+            if (!data) {
+                return next(new SendError(400, "Category not found"))
             }
             else {
-                res.status(400).json({ statusCode: 400, message: "Category not found", success: true });
+                const result = await Category.findByIdAndUpdate({ _id: req.params.id }, req.body, { new: true })
+                res.status(200).json({ statusCode: 200, message: "Category update successfully", data: result });
+
             }
         } catch (error) {
-            res.status(400).json({ statusCode: 400, message: error.message, success: false });
+            res.status(400).json({ statusCode: 400, message: error.message });
         }
     },
 }

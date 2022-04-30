@@ -61,15 +61,15 @@ module.exports = {
                         return res.status(200).json({ statusCode: 200, message: 'Product create successfully', data: newdata, });
                     }
                     else {
-                        res.status(400).json({ statusCode: 400, message: "Brand not found", success: false });
+                        res.status(400).json({ statusCode: 400, message: "Brand not found" });
                     }
                 }
                 else {
-                    res.status(400).json({ statusCode: 400, message: "Category not found", success: false });
+                    res.status(400).json({ statusCode: 400, message: "Category not found" });
                 }
             }
         } catch (error) {
-            res.status(400).json({ statusCode: 400, message: error.message, success: false });
+            res.status(400).json({ statusCode: 400, message: error.message });
         }
     },
 
@@ -91,7 +91,7 @@ module.exports = {
                     return res.status(200).json({ statusCode: 200, totalProduct: result.length, data: result });
                 }
                 else {
-                    return res.status(400).json({ statusCode: 400, message: "no product found", success: false });
+                    return res.status(400).json({ statusCode: 400, message: "no product found" });
                 }
             }
             if (req.role == "user") {
@@ -110,7 +110,7 @@ module.exports = {
                     return res.status(200).json({ statusCode: 200, totalProduct: result.length, data: result });
                 }
                 else {
-                    return res.status(400).json({ statusCode: 400, message: "no product found", success: false });
+                    return res.status(400).json({ statusCode: 400, message: "no product found" });
                 }
             }
             const { page = 1, limit = 5 } = req.query;
@@ -128,17 +128,17 @@ module.exports = {
                 return res.status(200).json({ statusCode: 200, totalProduct: result.length, data: result });
             }
             else {
-                return res.status(400).json({ statusCode: 400, message: "no product found", success: false });
+                return res.status(400).json({ statusCode: 400, message: "no product found" });
             }
         } catch (error) {
-            res.status(400).json({ statusCode: 400, message: error.message, success: false });
+            res.status(400).json({ statusCode: 400, message: error.message });
         }
     },
 
     showOneProduct: async (req, res) => {
         try {
             if (ObjectId.isValid(req.params.id) === false) {
-                return res.status(400).json({ success: false, statusCode: 400, message: "invalid id format" })
+                return res.status(400).json({ statusCode: 400, message: "invalid id format" })
             }
             const data = await Product.findById({ _id: req.params.id })
                 .populate("brandId", "brandName").populate("categoryId", "categoryName").populate("image", "image.photoUrl")
@@ -146,10 +146,10 @@ module.exports = {
                 res.status(200).json({ statusCode: 200, message: "Product find by id", data: data })
             }
             else {
-                res.status(400).json({ statusCode: 400, message: "Product not found", success: false })
+                res.status(400).json({ statusCode: 400, message: "Product not found" })
             }
         } catch (error) {
-            res.status(400).json({ statusCode: 400, message: error.message, success: false })
+            res.status(400).json({ statusCode: 400, message: error.message })
         }
     },
 
@@ -174,22 +174,22 @@ module.exports = {
                 await user.remove();
             }
             else {
-                res.status(400).json({ statusCode: 400, message: "Product Not Found", success: true });
+                res.status(400).json({ statusCode: 400, message: "Product Not Found" });
             }
         } catch (error) {
-            return res.status(400).json({ statusCode: 400, message: error.message, success: false });
+            return res.status(400).json({ statusCode: 400, message: error.message });
         }
     },
 
     updateProduct: async (req, res) => {
         try {
             if (Object.keys(req.body).length == 0 && req.files == undefined) {
-                return res.status(400).json({ statusCode: 400, message: 'please add some fileds', succes: false, });
+                return res.status(400).json({ statusCode: 400, message: 'please add some fileds' });
             }
             req.body.images = req.photoUrl;
             const result = await Product.findByIdAndUpdate({ _id: req.params.id }, req.body, { new: true })
             if (!result) {
-                return res.status(400).json({ statusCode: 400, message: 'Product not found', succes: false, });
+                return res.status(400).json({ statusCode: 400, message: 'Product not found'});
             }
             const findProduct = await Image.findOne({ productId: result.id });
             if (req.files.length > 0) {
@@ -204,7 +204,7 @@ module.exports = {
                 .populate("brandId", "brandName").populate("categoryId", "categoryName").populate("image", "image.photoUrl")
             return res.status(200).json({ statusCode: 200, message: 'product update successfully', data: newResult });
         } catch (error) {
-            return res.status(400).json({ statusCode: 400, message: error.message, succes: false, });
+            return res.status(400).json({ statusCode: 400, message: error.message});
         }
     },
 
@@ -215,9 +215,9 @@ module.exports = {
                 const data = await Product.findByIdAndUpdate({ _id: req.body.id }, { isApproveByAdmin: true }, { new: true })
                 return res.status(200).json({ statusCode: 200, message: "Product verified by admin", data: data })
             }
-            return res.status(400).json({ statusCode: 400, message: "Product not found", success: false })
+            return res.status(400).json({ statusCode: 400, message: "Product not found" })
         } catch (error) {
-            return res.status(400).json({ statusCode: 400, message: error.message, succes: false, });
+            return res.status(400).json({ statusCode: 400, message: error.message });
         }
     }
 

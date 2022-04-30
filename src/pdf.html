@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Bootstrap basic table example</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"
+        integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ=="
+        crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .heading {
+            width: 100%;
+        }
+
+        .p1 {
+            width: 33.33%;
+            float: left;
+        }
+
+        .p2 {
+            width: 33.33%;
+            float: right;
+            text-align: right;
+            margin-right: 200px;
+        }
+
+        .container {
+            width: 100%;
+        }
+
+        .p1 {
+            width: 33.33%;
+            float: left;
+        }
+
+        .p2 {
+            width: 33.33%;
+            float: right;
+            text-align: right;
+            margin-right: 200px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div>
+            <p class="p3">Order id : {{_id}} </p>
+            <p class="p4">Date : {{createdAt}}</p>
+        </div>
+        <div class="heading">
+            <p class="p1"><b>From : </b> Flipkart </p>
+            <p class="p2"><b>To : </b>{{fullName}} <br> house no : {{houseNo}} , street no : {{street}} <br>{{landmark}}
+                <br>city : {{city}} {{pincode}} {{country}}<br>phone : {{number }}
+            </p>
+        </div>
+        <table class="table table-bordered table-striped table-hover">
+            <tr>
+                <th>Product Name</th>
+                <th>Product Quantity</th>
+                <th>Product Price</th>
+            </tr>
+
+            {{#each productDetails}}
+            <tr>
+                <td>{{this.productName}}</td>
+                <td>{{this.productQuantity}}</td>
+                <td>{{this.productPrice}}</td>
+            </tr>
+            {{/each}}
+        </table>
+    </div><br /><br />
+    <p style="text-align: right;" class="p2"><b>Total : {{totalAmount}}</b></p>
+</body>
+
+</html>

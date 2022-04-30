@@ -1,13 +1,13 @@
 const { User } = require('../models/schema');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
-// const jwt = require('jsonwebtoken');
-const { logger } = require('./../shared/logger');
+const SendError = require("../config/apierror")
+
 const { emailSend, otpFunction, generateToken, showToFields, } = require('../middleware/index');
 const { port, host, secretKey } = require('./../config/index');
 
 module.exports = {
-  adminSignup: async (req, res) => {
+  adminSignup: async (req, res, next) => {
     try {
       const { email, fullName, number, password } = req.body
       const foundUser = await User.findOne({ role: "admin" });
@@ -17,14 +17,15 @@ module.exports = {
         const jwtToken = generateToken(result.id);
         res.status(200).json({ statusCode: 200, message: 'singup successfully', data: result, jwtToken });
       } else {
-        return res.status(409).json({ statusCode: 409, message: 'admin already exist', success: false, });
+        return next(new SendError(400, "admin already exist"))
+
       }
     } catch (err) {
       res.status(400).send({ statusCode: 400, message: err.message });
     }
   },
 
-  signup: async (req, res) => {
+  signup: async (req, res, next) => {
     try {
       const email = await User.findOne({ email: req.body.email });
       if (!email) {
@@ -43,14 +44,14 @@ module.exports = {
         emailSend(link, newMail);
         res.status(200).json({ statusCode: 200, message: 'Verification link sent on your email' });
       } else {
-        return res.status(409).json({ statusCode: 409, message: 'email already exist', success: false, });
+        return next(new SendError(400, "email already exist"))
       }
     } catch (err) {
       res.status(400).send({ statusCode: 400, message: err.message });
     }
   },
 
-  SellerLogin: async (req, res) => {
+  SellerLogin: async (req, res, next) => {
     try {
       if (req.body.email) {
         const result = await User.findOne({ email: req.body.email });
@@ -66,19 +67,19 @@ module.exports = {
                   const token = generateToken(result.id);
                   res.status(200).json({ statusCode: 200, message: 'Login Successfully', token, role: result.role });
                 } else {
-                  res.status(400).json({ statusCode: 400, message: 'invalid user , not a seller' });
+                  return next(new SendError(400, "invalid user , not a seller"))
                 }
               } else {
-                res.status(400).json({ statusCode: 400, message: 'Enter Correct Password', success: false, });
+                return next(new SendError(400, "Enter Correct Password"))
               }
             } else {
-              res.status(200).json({ statusCode: 200, message: 'You are not verified by admin', });
+              return next(new SendError(400, "You are not verified by admin"))
             }
           } else {
-            res.status(400).json({ statusCode: 400, message: 'Email not verified', success: false });
+            return next(new SendError(400, "Email not verified"))
           }
         } else {
-          res.status(400).json({ statusCode: 400, message: 'Email not found', success: false });
+          return next(new SendError(400, "Email not found"))
         }
       } else if (req.body.number) {
         const result = await User.findOne({ number: req.body.number });
@@ -91,30 +92,30 @@ module.exports = {
             if (result.isVerified === true) {
               if (result.isApprove === true) {
                 const token = generateToken(result.id);
-                res.status(200).json({ statusCode: 200, message: 'Login Successfully', token, role: result.role, success: true });
+                res.status(200).json({ statusCode: 200, message: 'Login Successfully', token, role: result.role });
               } else {
-                res.status(400).json({ statusCode: 400, message: 'Not verified by admin' });
+                return next(new SendError(400, "Not verified by admin"))
               }
             } else {
               const Otp = otpFunction();
               const data = await User.findOneAndUpdate({ number: req.body.number }, { otp: Otp, resetTime: new Date(Date.now() + 10 * 60000) });
-              res.status(200).json({ statusCode: 200, message: 'Otp sent on register number', success: true });
+              res.status(200).json({ statusCode: 200, message: 'Otp sent on register number' });
             }
           } else {
-            res.status(400).json({ statusCode: 400, message: 'Enter Correct Password', success: false, });
+            return next(new SendError(400, "Enter Correct Password"))
           }
         } else {
-          res.status(404).json({ statusCode: 404, message: 'User not register', success: false });
+          return next(new SendError(400, "User not register"))
         }
       } else {
-        res.status(400).json({ statusCode: 400, message: 'Enter number/email', success: false });
+        return next(new SendError(400, "Enter number/email"))
       }
     } catch (error) {
-      res.status(400).json({ statusCode: 400, message: error.message, success: false });
+      res.status(400).json({ statusCode: 400, message: error.message });
     }
   },
 
-  adminLogin: async (req, res) => {
+  adminLogin: async (req, res, next) => {
     try {
       const result = await User.findOne({ email: req.body.email });
       if (result) {
@@ -122,22 +123,22 @@ module.exports = {
         if (result.role === 'admin') {
           if (passwordMatch) {
             const token = generateToken(result.id);
-            res.status(200).json({ statusCode: 200, message: 'Login Successfully', token, success: true, role: result.role });
+            res.status(200).json({ statusCode: 200, message: 'Login Successfully', token, role: result.role });
           } else {
-            res.status(409).json({ statusCode: 409, message: 'Enter Correct Password', success: false });
+            return next(new SendError(400, "Enter Correct Password"))
           }
         } else {
-          res.status(400).json({ statusCode: 400, message: 'invalid user , Not a admin' });
+          return next(new SendError(400, "invalid user , Not a admin"))
         }
       } else {
-        res.status(400).json({ statusCode: 400, message: 'Email not register', success: false });
+        return next(new SendError(400, "Email not register"))
       }
     } catch (error) {
-      res.status(400).json({ statusCode: 400, message: 'error', success: false });
+      res.status(400).json({ statusCode: 400, message: 'error' });
     }
   },
 
-  confirmEmail: async (req, res) => {
+  confirmEmail: async (req, res, next) => {
     try {
       const result = await User.findOne({ token: req.params.token });
       const token = req.params.token;
@@ -148,16 +149,16 @@ module.exports = {
           { isVerified: true, token: '' },
           { new: true }
         );
-        res.status(200).json({ statusCode: 200, message: 'Email verification successfull', success: true });
+        res.status(200).json({ statusCode: 200, message: 'Email verification successfull' });
       } else {
-        res.status(400).json({ statusCode: 400, message: 'Bad request', success: false });
+        return next(new SendError(400, "Bad request"))
       }
     } catch (error) {
-      res.status(400).json({ statusCode: 400, message: 'Insert valid token', success: false });
+      return next(new SendError(400, "Insert valid token"))
     }
   },
 
-  verifiedByAdmin: async (req, res) => {
+  verifiedByAdmin: async (req, res, next) => {
     try {
       const result = await User.findById({ _id: req.body.id });
       if (result) {
@@ -167,15 +168,15 @@ module.exports = {
         emailSend(link);
       } else {
         const link = `Verification request failed , try again`;
-        res.status(400).json({ statusCode: 400, messsage: 'Invalid user', success: false });
+        return next(new SendError(400, "Invalid user"))
         emailSend(link);
       }
     } catch (err) {
-      res.status(400).json({ statusCode: 400, message: 'Invalid id', success: false });
+      res.status(400).json({ statusCode: 400, message: 'Invalid id' });
     }
   },
 
-  verifyOtp: async (req, res) => {
+  verifyOtp: async (req, res, next) => {
     try {
       const result = await User.findOne({ number: req.body.number });
       if (result) {
@@ -188,12 +189,12 @@ module.exports = {
           } else if (findotp === matchOtp) {
             const newResult = await User.findOneAndUpdate({ number: req.body.number }, { isVerified: true });
             const link = `number verification successfull`;
-            res.status(200).json({ statusCode: 200, message: 'Number Verified Successfully', data: newResult });
+            res.status(200).json({ statusCode: 200, message: 'Number Verification Successful , now you can login' });
           } else {
-            res.status(400).json({ statusCode: 400, messsage: 'Enter Correct OTP', success: false });
+            return next(new SendError(400, "Enter Correct OTP"))
           }
         } else {
-          res.status(400).json({ statusCode: 400, message: 'Otp expire , otp resend after 10 min' });
+          return next(new SendError(400, "Otp expire , otp resend after 10 min"))
         }
       } else {
         res.status(400).json({ statusCode: 400, message: 'Enter Correct Number' });

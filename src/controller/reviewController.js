@@ -20,9 +20,9 @@ exports.createReview = async (req, res) => {
         if (findUser) {
             return res.status(400).json({ statusCode: 400, message: "already commited" })
         }
-        const product = await Product.findById({ _id: req.body.productId }).populate("review" , "rating")
+        const product = await Product.findById({ _id: req.body.productId }).populate("review", "rating")
         if (!product) {
-            return res.status(400).json({ statusCode: 400, success: false, message: "Product not found" })
+            return res.status(400).json({ statusCode: 400, message: "Product not found" })
         }
         const data = new Review({ productId, rating, comment, userId: req.id, image })
         if (!isUndefined(req.files)) {
@@ -48,17 +48,18 @@ exports.createReview = async (req, res) => {
             }
         }
         product.rating = rating
-        let rate =  0 ;
+        let rate = 0;
         product.review.map((a) => {
-            rate += a.rating})
-            const averageRateing = (rate + data.rating ) / (product.review.length + 1)
-            const result = await data.save()
-            product.review.push(result.id)
-            product.rating = averageRateing
-            await product.save()
-        return res.status(200).json({ statusCode: 200, success: true, message: "review submitted successfully", data: data })
+            rate += a.rating
+        })
+        const averageRateing = (rate + data.rating) / (product.review.length + 1)
+        const result = await data.save()
+        product.review.push(result.id)
+        product.rating = averageRateing
+        await product.save()
+        return res.status(200).json({ statusCode: 200, message: "review submitted successfully", data: data })
     } catch (error) {
-        res.status(400).json({ statusCode: 400, success: false, message: error.message })
+        res.status(400).json({ statusCode: 400, message: error.message })
     }
 }
 
@@ -68,9 +69,9 @@ exports.updateReview = async (req, res) => {
         if (result) {
             return res.status(200).json({ statusCode: 200, message: "Review updated successfully", data: result })
         }
-        res.status(400).json({ statusCode: 400, success: false, message: "Review not found" })
+        res.status(400).json({ statusCode: 400, message: "Review not found" })
     } catch (error) {
-        res.status(400).json({ statusCode: 400, success: false, message: error.message })
+        res.status(400).json({ statusCode: 400, message: error.message })
     }
 }
 
@@ -80,8 +81,8 @@ exports.deleteReview = async (req, res) => {
         if (result) {
             return res.status(200).json({ statusCode: 200, message: "Review delete successfully", data: result })
         }
-        res.status(400).json({ statusCode: 400, success: false, message: "Review not found" })
+        res.status(400).json({ statusCode: 400, message: "Review not found" })
     } catch (error) {
-        res.status(400).json({ statusCode: 400, success: false, message: error.message })
+        res.status(400).json({ statusCode: 400, message: error.message })
     }
 }

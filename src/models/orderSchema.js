@@ -11,12 +11,18 @@ const orderSchema = new mongoose.Schema({
             default: 1
         }
     }],
-    price : Number,
+    price: Number,
     paymentMode: { type: String, enum: ['COD', 'cards', 'mobilePayments', 'bankTransfer'], default: "COD" },
     deliveryMode: {
         type: Date,
     },
-    status: { type: String, enum: ['ordered', 'packing' ,'shipping', 'outForDelivery', 'cancelled', 'deliverd'], default: "ordered" }
+    status: { type: String, enum: ['ordered', 'packing', 'shipping', 'outForDelivery', 'cancelled', 'deliverd'], default: "ordered" },
+    createdAt: { type: Date, required: true, default: Date.now },
+    updatedAt: {
+        type: Date,
+        required: true,
+        default: Date.now,
+    }
 })
 
 const Order = mongoose.model('Order', orderSchema)

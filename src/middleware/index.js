@@ -70,19 +70,19 @@ exports.generateToken = (id) => {
 exports.tokenVerify = async (req, res, next) => {
   const token = req.headers['authorization'];
   if (!token) {
-    return res.status(400).json({ statusCode: 400, message: 'Token is required for authentication', success: false, });
+    return res.status(400).json({ statusCode: 400, message: 'Token is required for authentication' });
   } else {
     const authHeader = req.headers.authorization;
     const bearerToken = authHeader.split(' ');
     const token = bearerToken[1];
     const admin = jwt.verify(token, secretKey, async (error, info) => {
       if (error) {
-        return res.status(400).json({ statusCode: 400, message: 'invalid token', success: false });
+        return res.status(400).json({ statusCode: 400, message: 'invalid token' });
       } else {
         const id = info.id;
         const result = await User.findOne({ _id: id });
         if (!result) {
-          return res.status(401).json({ statusCode: 401, message: "unauthorized access", success: false })
+          return res.status(401).json({ statusCode: 401, message: "unauthorized access" })
         }
         req.user = result
         req.role = result.role
@@ -118,12 +118,12 @@ exports.tokenVerifyForProduct = async (req, res, next) => {
     const token = bearerToken[1];
     const admin = jwt.verify(token, secretKey, async (error, info) => {
       if (error) {
-        return res.status(400).json({ statusCode: 400, message: 'invalid token', success: false });
+        return res.status(400).json({ statusCode: 400, message: 'invalid token' });
       } else {
         const id = info.id;
         const result = await User.findOne({ _id: id });
         if (!result) {
-          return res.status(401).json({ statusCode: 401, message: "unauthorized access", success: false })
+          return res.status(401).json({ statusCode: 401, message: "unauthorized access" })
         }
         req.user = result
         req.role = result.role
@@ -198,7 +198,7 @@ exports.uploadImage = (req, res, next) => {
           if (array.includes(file.originalname) === false) {
             array.push(file.originalname)
           } else {
-            return res.status(400).json({ statusCode: 400, message: "Same file not allowed", success: false })
+            return res.status(400).json({ statusCode: 400, message: "Same file not allowed" })
           }
         }
         req.data = req.body
@@ -206,7 +206,7 @@ exports.uploadImage = (req, res, next) => {
       }
     }
     else {
-      return res.status(400).json({ statusCode: 400, message: error.message, success: false })
+      return res.status(400).json({ statusCode: 400, message: error.message })
     }
   })
 }
@@ -262,7 +262,7 @@ exports.uploadSingleImage = (req, res, next) => {
       next()
     }
     else {
-      return res.status(400).json({ statusCode: 400, message: error.message, success: false })
+      return res.status(400).json({ statusCode: 400, message: error.message })
     }
   })
 }
@@ -270,17 +270,14 @@ exports.uploadSingleImage = (req, res, next) => {
 
 exports.uploadSingleImage = (req, res, next) => {
   uploads(req, res, (error) => {
-    // console.log(">>>>>>>" , req.file)
     if (!error) {
       next()
     }
     else {
-      return res.status(400).json({ statusCode: 400, message: error.message, success: false })
+      return res.status(400).json({ statusCode: 400, message: error.message })
     }
   })
 }
-
-
 
 exports.emailMsgSend = async (email) => {
   const transporter = nodemailer.createTransport({
@@ -320,7 +317,12 @@ exports.sendPdfByEmail = async (data, email) => {
     to: email,
     subject: 'flipkart Invoice',
     text: "Your order has been placed successfully.",
-    html: pdfFile(data)
+    html: pdfFile(data),
+    attachments: [{
+      filename: 'output.pdf',
+      path:path.join(__dirname , "./../output.pdf"),
+      contentType: 'application/pdf'
+    }]
   };
   await transporter.sendMail(options, (err, info) => {
     if (err) {

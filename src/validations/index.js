@@ -89,7 +89,7 @@ exports.productValidation = (req, res, next) => {
       categoryId: Joi.string().min(2).max(30).required(),
       productName: Joi.string().min(4).max(99).required(),
       productDetail: Joi.string().min(3).max(200).required(),
-      price: Joi.number().min(1).required(),
+      price: Joi.number().min(1).message("price can not be less than zero").required(),
       quantity: Joi.number().required()
     });
     return JoiSchema.validate(product);
@@ -125,7 +125,10 @@ exports.brandValidation = (req, res, next) => {
 exports.orderValidation = (req, res, next) => {
   const validateOrder = (order) => {
     const JoiSchema = Joi.object({
-      product: Joi.array().required(),
+      product: Joi.array().items(Joi.object({
+        productId: Joi.string().required(),
+        quantity: Joi.number().min(1).message("Product quantity must be 1").required()
+      })).required(),
       addressId: Joi.string().required(),
       paymentMode: Joi.string().optional(),
       deliveryMode: Joi.string().optional()
